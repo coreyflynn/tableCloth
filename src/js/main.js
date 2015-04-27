@@ -1,5 +1,7 @@
 var coreOptions = require('./core/options');
 var coreViewport = require('./core/viewport');
+var coreCellManager = require('./core/cellManager');
+var coreCell = require('./core/cell');
 
 /**
  * tableCloth constructor. Builds a new instance of tableCloth and binds it
@@ -19,13 +21,26 @@ var tableCloth = function(target,options) {
 
   // attach a top level canvas element to serve as the tableCloth viewport
   coreViewport.attach(this);
+
+  // attach a cell manager
+  this.cellManager = new coreCellManager.basicCellManager(this);
+
+  // attach a cell factory method
+  this.cellFactory = {};
+  this.cellFactory.basicCell = coreCell.basicCell;
+
+}
+
+/**
+ * animates the tableCloth instance to the diesired height
+ * @param {float} height   the height in pixels to animate to
+ * @param {float} duration the duration of the animation in milliseconds
+ */
+tableCloth.prototype.animateToHeight = function(height,duration) {
+  coreViewport.animateToHeight(this, height, duration);
 }
 
 // if a window object is present, attach tableCloth to it
 if (window) {
   window.tableCloth = tableCloth
-}
-
-tableCloth.prototype.animateToHeight = function(height,duration) {
-  coreViewport.animateToHeight(this, height, duration);
 }

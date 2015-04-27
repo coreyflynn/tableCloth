@@ -48,7 +48,7 @@ function animateToHeight(tableCloth, height, duration, easeName) {
   var start = new Date().getTime();
   var startingHeight = tableCloth.options.height;
   var delta = height - tableCloth.viewport.can.height;
-  var easing = (easeName === undefined) ? ease.inOutQuad : ease[easeName];
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
 
   var timer = 0;
   var int = setInterval(function() {
@@ -60,6 +60,7 @@ function animateToHeight(tableCloth, height, duration, easeName) {
 
     window.requestAnimationFrame(function() {
       render.background(tableCloth);
+      tableCloth.cellManager.renderCells();
     });
 
     if (timeDiff >= duration) {
