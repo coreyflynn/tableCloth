@@ -1,0 +1,24 @@
+{
+  "name": "tableCloth",
+  "version": "0.0.1",
+  "description": "A pure canvas implementation for smooth scrolling table views",
+  "main": "dist/tableCloth.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Corey Flynn",
+  "license": "ISC",
+  "devDependencies": {
+    "bezier-easing": "^0.4.5",
+    "browserify": "^9.0.8",
+    "ease-component": "^1.0.0",
+    "gulp": "^3.8.11",
+    "gulp-sass": "^1.3.3",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-util": "^3.0.4",
+    "gulp-watch": "^4.2.4",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.1.2"
+  }
+}
