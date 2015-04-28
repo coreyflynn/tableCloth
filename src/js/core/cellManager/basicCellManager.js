@@ -4,15 +4,51 @@
  ********************************************************************/
  var util = require('../util');
  var ease = require('ease-component');
+ var Hammer = require('hammerjs');
 
 /**
  * creates a new basicCellManager
  */
 var basicCellManager = function(tableCloth) {
+  var self = this;
   this.tableCloth = tableCloth;
   this.cells = [];
   this.cellsHeight = 0;
   this.scrollPosition = 0;
+  this.hammertime = new Hammer(tableCloth.viewport.can.$el, {});
+  this.hammertime.on('panstart', function(){
+    self.panStartScrollPosition = self.scrollPosition;
+  });
+  this.hammertime.on('pan', function(ev) {
+    console.log(ev.isFirst);
+    self.scrollPosition = self.panStartScrollPosition - ev.deltaY;
+    self.renderCells();
+  });
+
+  this.hammertime.on('panend', function(ev){
+    var finalscrollPosition = self.panStartScrollPosition - ev.deltaY;
+    if (finalscrollPosition < 0) {
+      self.scrollToPosition(0,300);
+    }
+    var maxScroll = self.cellsHeight - self.tableCloth.options.height;
+    if ( self.scrollPosition >= maxScroll) {
+      self.scrollToPosition(maxScroll,300);
+    }
+
+  });
+
+  this.tableCloth.viewport.can.$el.addEventListener('wheel', function(ev){
+    ev.preventDefault();
+    self.scrollPosition -= ev.wheelDeltaY;
+    if (self.scrollPosition < 0 ) {
+      self.scrollPosition = 0;
+    }
+    var maxScroll = self.cellsHeight - self.tableCloth.options.height;
+    if ( self.scrollPosition >= maxScroll) {
+      self.scrollPosition = maxScroll;
+    }
+    self.renderCells();
+  });
 }
 
 /**
@@ -95,6 +131,7 @@ basicCellManager.prototype.scrollToPosition = function(y, duration, easeName) {
     });
 
     if (timeDiff >= duration) {
+      self.scrollAnimating = false;
       clearInterval(int);
     }
 
