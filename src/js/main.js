@@ -1,6 +1,7 @@
 var coreOptions = require('./core/options');
 var coreViewport = require('./core/viewport');
 var coreCellManager = require('./core/cellManager');
+var coreScrollManager = require('./core/scrollManager');
 var coreCell = require('./core/cell');
 
 /**
@@ -24,6 +25,9 @@ var tableCloth = function(target,options) {
 
   // attach a cell manager
   this.cellManager = new coreCellManager.basicCellManager(this);
+
+  // attach a scroll manager
+  this.scrollManager = new coreScrollManager.basicScrollManager(this.cellManager);
 
   // attach a cell factory method
   this.cellFactory = {};

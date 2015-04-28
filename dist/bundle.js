@@ -2,6 +2,7 @@
 var coreOptions = require('./core/options');
 var coreViewport = require('./core/viewport');
 var coreCellManager = require('./core/cellManager');
+var coreScrollManager = require('./core/scrollManager');
 var coreCell = require('./core/cell');
 
 /**
@@ -26,6 +27,9 @@ var tableCloth = function(target,options) {
   // attach a cell manager
   this.cellManager = new coreCellManager.basicCellManager(this);
 
+  // attach a scroll manager
+  this.scrollManager = new coreScrollManager.basicScrollManager(this.cellManager);
+
   // attach a cell factory method
   this.cellFactory = {};
   this.cellFactory.basicCell = coreCell.basicCell;
@@ -46,7 +50,7 @@ if (window) {
   window.tableCloth = tableCloth
 }
 
-},{"./core/cell":5,"./core/cellManager":8,"./core/options":9,"./core/viewport":13}],2:[function(require,module,exports){
+},{"./core/cell":5,"./core/cellManager":8,"./core/options":9,"./core/scrollManager":13,"./core/viewport":15}],2:[function(require,module,exports){
 
 // easing functions from "Tween.js"
 
@@ -2690,6 +2694,7 @@ if (typeof define == TYPE_FUNCTION && define.amd) {
  ***************************************************************************/
 var cellOptions = require('./options');
 var util = require('../util');
+var ease = require('ease-component');
 
 var basicCell = function(options) {
   // attach the options to the constructed object
@@ -2700,29 +2705,55 @@ var basicCell = function(options) {
 
 }
 
-basicCell.prototype.render = function(tableCloth) {
+basicCell.prototype.render = function(tableCloth,xOffset,yOffset) {
   var height = this.options.height;
   var width = this.options.width;
   var pixelRatio = util.getPixelRatio();
 
-  tableCloth.viewport.can.width = width;
-  tableCloth.viewport.can.height = height;
-  tableCloth.viewport.can.style.width = width + 'px';
-  tableCloth.viewport.can.style.height = height + 'px';
-
   tableCloth.viewport.ctx.beginPath();
-  tableCloth.viewport.ctx.rect(this.options.x, this.options.y, width * pixelRatio, height * pixelRatio);
-  tableCloth.viewport.ctx.fillStyle = tableCloth.options.bgColor;
+  tableCloth.viewport.ctx.rect(this.options.x + xOffset,
+                                this.options.y - yOffset,
+                                width * pixelRatio,
+                                height * pixelRatio);
+  tableCloth.viewport.ctx.fillStyle = this.options.bgColor;
   tableCloth.viewport.ctx.fill();
 
-  tableCloth.viewport.ctx.scale(1 / pixelRatio, 1 / pixelRatio);
+  // tableCloth.viewport.ctx.scale(1 / pixelRatio, 1 / pixelRatio);
 
   return tableCloth
 }
 
+basicCell.prototype.animateToHeight = function(tableCloth,
+                                                height, duration, easeName) {
+  var self = this;
+  var start = new Date().getTime();
+  var startingHeight = this.options.height;
+  var delta = height - startingHeight;
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
+
+  var timer = 0;
+  var int = setInterval(function() {
+
+    var now = new Date().getTime();
+    var timeDiff =  now - start;
+    var proportion = timeDiff / duration;
+    self.options.height = startingHeight + easing(proportion) * delta;
+
+    window.requestAnimationFrame(function() {
+      tableCloth.cellManager.positionCells();
+      tableCloth.cellManager.renderCells();
+    });
+
+    if (timeDiff >= duration) {
+      clearInterval(int);
+    }
+
+  },1);
+}
+
 module.exports = basicCell;
 
-},{"../util":12,"./options":6}],5:[function(require,module,exports){
+},{"../util":14,"./options":6,"ease-component":2}],5:[function(require,module,exports){
 var basicCell = require('./basicCell');
 
 module.exports = {
@@ -2741,6 +2772,7 @@ function configure(options) {
   options.bgColor = (options.bgColor === undefined) ? '#EEEEEE' : options.bgColor;
   options.x = (options.x === undefined) ? 0 : options.x;
   options.y = (options.y === undefined) ? 0 : options.y;
+  options.index = (options.index === undefined) ? 0 : options.index;
 
   return options;
 }
@@ -2767,55 +2799,62 @@ var basicCellManager = function(tableCloth) {
   this.cells = [];
   this.cellsHeight = 0;
   this.scrollPosition = 0;
-  this.hammertime = new Hammer(tableCloth.viewport.can.$el, {});
-  this.hammertime.on('panstart', function(){
-    self.panStartScrollPosition = self.scrollPosition;
-  });
-  this.hammertime.on('pan', function(ev) {
-    console.log(ev.isFirst);
-    self.scrollPosition = self.panStartScrollPosition - ev.deltaY;
-    self.renderCells();
-  });
-
-  this.hammertime.on('panend', function(ev){
-    var finalscrollPosition = self.panStartScrollPosition - ev.deltaY;
-    if (finalscrollPosition < 0) {
-      self.scrollToPosition(0,300);
-    }
-    var maxScroll = self.cellsHeight - self.tableCloth.options.height;
-    if ( self.scrollPosition >= maxScroll) {
-      self.scrollToPosition(maxScroll,300);
-    }
-
-  });
-
-  this.tableCloth.viewport.can.$el.addEventListener('wheel', function(ev){
-    ev.preventDefault();
-    self.scrollPosition -= ev.wheelDeltaY;
-    if (self.scrollPosition < 0 ) {
-      self.scrollPosition = 0;
-    }
-    var maxScroll = self.cellsHeight - self.tableCloth.options.height;
-    if ( self.scrollPosition >= maxScroll) {
-      self.scrollPosition = maxScroll;
-    }
-    self.renderCells();
-  });
 }
 
 /**
- * add cell to the cell manager instance
+ * add cell to the cell manager instance at the end of the cell array
  * @param {tableCloth cell} cell the cell to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 1ms
+ * @return {tableCloth basicCellManager}
  */
-basicCellManager.prototype.addCell = function(cell) {
-
+basicCellManager.prototype.addCell = function(cell,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+  if (duration) {
+    var targetHeight = cell.options.height;
+    cell.options.height = 0;
+  }
   cell.options.y = this.cellsHeight;
+  cell.options.index = this.cells.length;
   this.cells.push(cell);
   this.cellsHeight += cell.options.height;
-  this.renderCells();
+  if (duration) {
+    cell.animateToHeight(this.tableCloth,targetHeight,duration);
+  } else {
+    this.renderCells();
+  }
+
 
   return this
 }
+
+/**
+ * add a cell to the cell manager instance at a given index
+ * @param {tableCloth cell} cell  the cell to add
+ * @param {int} index the index at which to add the cell
+ * @return {tableCloth basicCellManager}
+ */
+basicCellManager.prototype.addCellAtIndex = function(cell,index) {
+  this.cells.splice(index,0,cell);
+  this.positionCells().renderCells();
+  return this;
+}
+
+/**
+ * determines the x and y positions of all the cells given their ordering
+ * in the cells array
+ * @return {tableCloth basicCellManager}
+ */
+basicCellManager.prototype.positionCells = function() {
+  var self = this;
+  this.cellsHeight = 0;
+  this.cells.forEach(function(cell){
+    cell.options.y = self.cellsHeight;
+    self.cellsHeight += cell.options.height;
+  });
+  return this;
+}
+
 
 /**
  * render all cells at the current scroll position
@@ -2842,19 +2881,28 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
   this.tableCloth.viewport.can.style.width = viewportWidth + 'px';
   this.tableCloth.viewport.can.style.height = viewportHeight + 'px';
 
+  // make an intelligent guess as to where we need to start looking at cells
+  // in the array of cells
+  var cellsToRender;
+  if (this.scrollPosition > 100) {
+    var averageCellHeight = this.cellsHeight / this.cells.length;
+    var aproximateCellsAboveViewport = this.scrollPosition / averageCellHeight - 2;
+    cellsToRender = this.cells.slice(Math.floor(aproximateCellsAboveViewport),
+                                          this.cells.length);
+  } else {
+    cellsToRender = this.cells;
+  }
+
   // render cells
-  this.cells.forEach(function (cell) {
+  cellsToRender.some(function (cell) {
 
     // only render the cell if it is in the viewport
-    if (cell.options.y + cell.options.height > self.scrollPosition
-      && cell.options.y < self.scrollPosition + self.tableCloth.options.height) {
-        self.tableCloth.viewport.ctx.beginPath();
-        self.tableCloth.viewport.ctx.rect(cell.options.x, cell.options.y - self.scrollPosition,
-                                      cell.options.width * pixelRatio,
-                                      cell.options.height * pixelRatio);
-        self.tableCloth.viewport.ctx.fillStyle = cell.options.bgColor;
-        self.tableCloth.viewport.ctx.fill();
+    if (cell.options.y + cell.options.height > self.scrollPosition) {
+        cell.render(self.tableCloth,0,self.scrollPosition);
     }
+
+    // stop inspecting cells once we are below the viewport
+    return cell.options.y > self.scrollPosition + self.tableCloth.options.height;
   });
 
   this.tableCloth.viewport.ctx.scale(1 / pixelRatio, 1 / pixelRatio);
@@ -2862,37 +2910,9 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
   return this;
 }
 
-
-basicCellManager.prototype.scrollToPosition = function(y, duration, easeName) {
-  var self = this;
-  var start = new Date().getTime();
-  var startingPosition = this.scrollPosition;
-  var delta = y - startingPosition;
-  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
-
-  var timer = 0;
-  var int = setInterval(function() {
-
-    var now = new Date().getTime();
-    var timeDiff =  now - start;
-    var proportion = timeDiff / duration;
-    self.scrollPosition = startingPosition + easing(proportion) * delta;
-
-    window.requestAnimationFrame(function() {
-      self.renderCells();
-    });
-
-    if (timeDiff >= duration) {
-      self.scrollAnimating = false;
-      clearInterval(int);
-    }
-
-  },1);
-}
-
 module.exports = basicCellManager;
 
-},{"../util":12,"ease-component":2,"hammerjs":3}],8:[function(require,module,exports){
+},{"../util":14,"ease-component":2,"hammerjs":3}],8:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 
 module.exports = {
@@ -2961,7 +2981,87 @@ module.exports = {
   main: main
 }
 
-},{"../util":12}],12:[function(require,module,exports){
+},{"../util":14}],12:[function(require,module,exports){
+/**************************
+ * Basic Scroll Manager   *
+ **************************/
+var ease = require('ease-component');
+var Hammer = require('hammerjs');
+
+var basicScrollManager = function(cellManager) {
+  var self = this;
+  this.cellManager = cellManager;
+  this.hammertime = new Hammer(cellManager.tableCloth.viewport.can.$el, {});
+  this.hammertime.on('panstart', function(){
+    self.panStartScrollPosition = self.cellManager.scrollPosition;
+  });
+  this.hammertime.on('pan', function(ev) {
+    self.cellManager.scrollPosition = self.panStartScrollPosition - ev.deltaY;
+    self.cellManager.renderCells();
+  });
+
+  this.hammertime.on('panend', function(ev){
+    var finalscrollPosition = self.panStartScrollPosition - ev.deltaY;
+    if (finalscrollPosition < 0) {
+      self.scrollToPosition(0,300);
+    }
+    var maxScroll = self.cellManager.cellsHeight - self.cellManager.tableCloth.options.height;
+    if ( self.cellManager.scrollPosition >= maxScroll) {
+      self.scrollToPosition(maxScroll,300);
+    }
+
+  });
+
+  this.cellManager.tableCloth.viewport.can.$el.addEventListener('wheel', function(ev){
+    ev.preventDefault();
+    self.cellManager.scrollPosition -= ev.wheelDeltaY;
+    if (self.cellManager.scrollPosition < 0 ) {
+      self.cellManager.scrollPosition = 0;
+    }
+    var maxScroll = self.cellManager.cellsHeight - self.cellManager.tableCloth.options.height;
+    if ( self.cellManager.scrollPosition >= maxScroll) {
+      self.cellManager.scrollPosition = maxScroll;
+    }
+    self.cellManager.renderCells();
+  });
+}
+
+basicScrollManager.prototype.scrollToPosition = function(y, duration, easeName) {
+  var self = this;
+  var start = new Date().getTime();
+  var startingPosition = this.cellManager.scrollPosition;
+  var delta = y - startingPosition;
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
+
+  var timer = 0;
+  var int = setInterval(function() {
+
+    var now = new Date().getTime();
+    var timeDiff =  now - start;
+    var proportion = timeDiff / duration;
+    self.cellManager.scrollPosition = startingPosition + easing(proportion) * delta;
+
+    window.requestAnimationFrame(function() {
+      self.cellManager.renderCells();
+    });
+
+    if (timeDiff >= duration) {
+      clearInterval(int);
+    }
+
+  },1);
+}
+
+module.exports = basicScrollManager;
+
+},{"ease-component":2,"hammerjs":3}],13:[function(require,module,exports){
+var basicScrollManager = require('./basicScrollManager');
+
+module.exports = {
+  basicScrollManager: basicScrollManager
+}
+
+},{"./basicScrollManager":12}],14:[function(require,module,exports){
 /**
  * grab the current browser's pixel ratio
  * http://www.html5rocks.com/en/tutorials/canvas/hidpi/
@@ -2982,7 +3082,7 @@ module.exports = {
   getPixelRatio: getPixelRatio
 }
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 /**********************
  * Viewport functions *
@@ -3060,6 +3160,6 @@ module.exports = {
   animateToHeight: animateToHeight
 }
 
-},{"./render":10,"./util":12,"ease-component":2}]},{},[1]);
+},{"./render":10,"./util":14,"ease-component":2}]},{},[1]);
 
 //# sourceMappingURL=bundle.js.map

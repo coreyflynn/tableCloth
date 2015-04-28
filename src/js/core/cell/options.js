@@ -9,6 +9,7 @@ function configure(options) {
   options.bgColor = (options.bgColor === undefined) ? '#EEEEEE' : options.bgColor;
   options.x = (options.x === undefined) ? 0 : options.x;
   options.y = (options.y === undefined) ? 0 : options.y;
+  options.index = (options.index === undefined) ? 0 : options.index;
 
   return options;
 }

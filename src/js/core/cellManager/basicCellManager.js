@@ -15,55 +15,62 @@ var basicCellManager = function(tableCloth) {
   this.cells = [];
   this.cellsHeight = 0;
   this.scrollPosition = 0;
-  this.hammertime = new Hammer(tableCloth.viewport.can.$el, {});
-  this.hammertime.on('panstart', function(){
-    self.panStartScrollPosition = self.scrollPosition;
-  });
-  this.hammertime.on('pan', function(ev) {
-    console.log(ev.isFirst);
-    self.scrollPosition = self.panStartScrollPosition - ev.deltaY;
-    self.renderCells();
-  });
-
-  this.hammertime.on('panend', function(ev){
-    var finalscrollPosition = self.panStartScrollPosition - ev.deltaY;
-    if (finalscrollPosition < 0) {
-      self.scrollToPosition(0,300);
-    }
-    var maxScroll = self.cellsHeight - self.tableCloth.options.height;
-    if ( self.scrollPosition >= maxScroll) {
-      self.scrollToPosition(maxScroll,300);
-    }
-
-  });
-
-  this.tableCloth.viewport.can.$el.addEventListener('wheel', function(ev){
-    ev.preventDefault();
-    self.scrollPosition -= ev.wheelDeltaY;
-    if (self.scrollPosition < 0 ) {
-      self.scrollPosition = 0;
-    }
-    var maxScroll = self.cellsHeight - self.tableCloth.options.height;
-    if ( self.scrollPosition >= maxScroll) {
-      self.scrollPosition = maxScroll;
-    }
-    self.renderCells();
-  });
 }
 
 /**
- * add cell to the cell manager instance
+ * add cell to the cell manager instance at the end of the cell array
  * @param {tableCloth cell} cell the cell to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 1ms
+ * @return {tableCloth basicCellManager}
  */
-basicCellManager.prototype.addCell = function(cell) {
-
+basicCellManager.prototype.addCell = function(cell,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+  if (duration) {
+    var targetHeight = cell.options.height;
+    cell.options.height = 0;
+  }
   cell.options.y = this.cellsHeight;
+  cell.options.index = this.cells.length;
   this.cells.push(cell);
   this.cellsHeight += cell.options.height;
-  this.renderCells();
+  if (duration) {
+    cell.animateToHeight(this.tableCloth,targetHeight,duration);
+  } else {
+    this.renderCells();
+  }
+
 
   return this
 }
+
+/**
+ * add a cell to the cell manager instance at a given index
+ * @param {tableCloth cell} cell  the cell to add
+ * @param {int} index the index at which to add the cell
+ * @return {tableCloth basicCellManager}
+ */
+basicCellManager.prototype.addCellAtIndex = function(cell,index) {
+  this.cells.splice(index,0,cell);
+  this.positionCells().renderCells();
+  return this;
+}
+
+/**
+ * determines the x and y positions of all the cells given their ordering
+ * in the cells array
+ * @return {tableCloth basicCellManager}
+ */
+basicCellManager.prototype.positionCells = function() {
+  var self = this;
+  this.cellsHeight = 0;
+  this.cells.forEach(function(cell){
+    cell.options.y = self.cellsHeight;
+    self.cellsHeight += cell.options.height;
+  });
+  return this;
+}
+
 
 /**
  * render all cells at the current scroll position
@@ -90,52 +97,33 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
   this.tableCloth.viewport.can.style.width = viewportWidth + 'px';
   this.tableCloth.viewport.can.style.height = viewportHeight + 'px';
 
+  // make an intelligent guess as to where we need to start looking at cells
+  // in the array of cells
+  var cellsToRender;
+  if (this.scrollPosition > 100) {
+    var averageCellHeight = this.cellsHeight / this.cells.length;
+    var aproximateCellsAboveViewport = this.scrollPosition / averageCellHeight - 2;
+    cellsToRender = this.cells.slice(Math.floor(aproximateCellsAboveViewport),
+                                          this.cells.length);
+  } else {
+    cellsToRender = this.cells;
+  }
+
   // render cells
-  this.cells.forEach(function (cell) {
+  cellsToRender.some(function (cell) {
 
     // only render the cell if it is in the viewport
-    if (cell.options.y + cell.options.height > self.scrollPosition
-      && cell.options.y < self.scrollPosition + self.tableCloth.options.height) {
-        self.tableCloth.viewport.ctx.beginPath();
-        self.tableCloth.viewport.ctx.rect(cell.options.x, cell.options.y - self.scrollPosition,
-                                      cell.options.width * pixelRatio,
-                                      cell.options.height * pixelRatio);
-        self.tableCloth.viewport.ctx.fillStyle = cell.options.bgColor;
-        self.tableCloth.viewport.ctx.fill();
+    if (cell.options.y + cell.options.height > self.scrollPosition) {
+        cell.render(self.tableCloth,0,self.scrollPosition);
     }
+
+    // stop inspecting cells once we are below the viewport
+    return cell.options.y > self.scrollPosition + self.tableCloth.options.height;
   });
 
   this.tableCloth.viewport.ctx.scale(1 / pixelRatio, 1 / pixelRatio);
 
   return this;
-}
-
-
-basicCellManager.prototype.scrollToPosition = function(y, duration, easeName) {
-  var self = this;
-  var start = new Date().getTime();
-  var startingPosition = this.scrollPosition;
-  var delta = y - startingPosition;
-  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
-
-  var timer = 0;
-  var int = setInterval(function() {
-
-    var now = new Date().getTime();
-    var timeDiff =  now - start;
-    var proportion = timeDiff / duration;
-    self.scrollPosition = startingPosition + easing(proportion) * delta;
-
-    window.requestAnimationFrame(function() {
-      self.renderCells();
-    });
-
-    if (timeDiff >= duration) {
-      self.scrollAnimating = false;
-      clearInterval(int);
-    }
-
-  },1);
 }
 
 module.exports = basicCellManager;
