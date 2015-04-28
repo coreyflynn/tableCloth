@@ -3,6 +3,7 @@ var coreOptions = require('./core/options');
 var coreViewport = require('./core/viewport');
 var coreCellManager = require('./core/cellManager');
 var coreScrollManager = require('./core/scrollManager');
+var coreMouseManager = require('./core/mouseManager');
 var coreCell = require('./core/cell');
 
 /**
@@ -21,6 +22,12 @@ var tableCloth = function(target,options) {
   // configure base options
   this.options = coreOptions.configure(this.options);
 
+  // if the fillContainer option is set, expand the tableCloth instance to fill its
+  // container
+  if (this.options.fillContainer) {
+    this.options.width = this.$el.clientWidth;
+  }
+
   // attach a top level canvas element to serve as the tableCloth viewport
   coreViewport.attach(this);
 
@@ -30,9 +37,18 @@ var tableCloth = function(target,options) {
   // attach a scroll manager
   this.scrollManager = new coreScrollManager.basicScrollManager(this.cellManager);
 
+  // attach a mouse manager
+  this.mouseManager = new coreMouseManager.basicMouseManager(this);
+
   // attach a cell factory method
   this.cellFactory = {};
   this.cellFactory.basicCell = coreCell.basicCell;
+
+  // listen for resize events on the window and reflow cells
+  var self = this;
+  window.onresize = function() {
+    self.cellManager.reflowCells();
+  }
 
 }
 
@@ -50,7 +66,7 @@ if (window) {
   window.tableCloth = tableCloth
 }
 
-},{"./core/cell":5,"./core/cellManager":8,"./core/options":9,"./core/scrollManager":13,"./core/viewport":15}],2:[function(require,module,exports){
+},{"./core/cell":5,"./core/cellManager":8,"./core/mouseManager":10,"./core/options":11,"./core/scrollManager":15,"./core/viewport":17}],2:[function(require,module,exports){
 
 // easing functions from "Tween.js"
 
@@ -2705,22 +2721,31 @@ var basicCell = function(options) {
 
 }
 
-basicCell.prototype.render = function(tableCloth,xOffset,yOffset) {
+basicCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
   var height = this.options.height;
   var width = this.options.width;
   var pixelRatio = util.getPixelRatio();
 
+  tableCloth.viewport.ctx.globalAlpha = this.options.opacity;
   tableCloth.viewport.ctx.beginPath();
   tableCloth.viewport.ctx.rect(this.options.x + xOffset,
                                 this.options.y - yOffset,
                                 width * pixelRatio,
                                 height * pixelRatio);
   tableCloth.viewport.ctx.fillStyle = this.options.bgColor;
+  if (highlight) {
+    tableCloth.viewport.ctx.globalAlpha = 0.5;
+  } else {
+    tableCloth.viewport.ctx.globalAlpha = 1;
+  }
   tableCloth.viewport.ctx.fill();
-
-  // tableCloth.viewport.ctx.scale(1 / pixelRatio, 1 / pixelRatio);
+  tableCloth.viewport.ctx.globalAlpha = 1;
 
   return tableCloth
+}
+
+basicCell.prototype.click = function() {
+  return this;
 }
 
 basicCell.prototype.animateToHeight = function(tableCloth,
@@ -2751,9 +2776,37 @@ basicCell.prototype.animateToHeight = function(tableCloth,
   },1);
 }
 
+basicCell.prototype.animateToOpacity = function(tableCloth,
+                                                opacity, duration, easeName) {
+  var self = this;
+  var start = new Date().getTime();
+  var startingOpacity = this.options.opacity;
+  var delta = opacity - startingOpacity;
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
+
+  var timer = 0;
+  var int = setInterval(function() {
+
+    var now = new Date().getTime();
+    var timeDiff =  now - start;
+    var proportion = timeDiff / duration;
+    self.options.opacity = startingOpacity + easing(proportion) * delta;
+
+    window.requestAnimationFrame(function() {
+      tableCloth.cellManager.positionCells();
+      tableCloth.cellManager.renderCells();
+    });
+
+    if (timeDiff >= duration) {
+      clearInterval(int);
+    }
+
+  },1);
+}
+
 module.exports = basicCell;
 
-},{"../util":14,"./options":6,"ease-component":2}],5:[function(require,module,exports){
+},{"../util":16,"./options":6,"ease-component":2}],5:[function(require,module,exports){
 var basicCell = require('./basicCell');
 
 module.exports = {
@@ -2773,6 +2826,9 @@ function configure(options) {
   options.x = (options.x === undefined) ? 0 : options.x;
   options.y = (options.y === undefined) ? 0 : options.y;
   options.index = (options.index === undefined) ? 0 : options.index;
+  options.highlight = (options.highlight === undefined) ? false : options.highlight;
+  options.opacity = (options.opacity === undefined) ? 1 : options.opacity;
+  options.fillContainer = (options.fillContainer === undefined) ? true : options.fillContainer;
 
   return options;
 }
@@ -2799,6 +2855,7 @@ var basicCellManager = function(tableCloth) {
   this.cells = [];
   this.cellsHeight = 0;
   this.scrollPosition = 0;
+  this.hoveredCellIndex = null;
 }
 
 /**
@@ -2813,6 +2870,9 @@ basicCellManager.prototype.addCell = function(cell,duration) {
   if (duration) {
     var targetHeight = cell.options.height;
     cell.options.height = 0;
+  }
+  if (cell.options.fillContainer) {
+    cell.options.width = this.tableCloth.$el.clientWidth;
   }
   cell.options.y = this.cellsHeight;
   cell.options.index = this.cells.length;
@@ -2829,6 +2889,19 @@ basicCellManager.prototype.addCell = function(cell,duration) {
 }
 
 /**
+ * reflow the cells in the basicCellManager instance
+ */
+basicCellManager.prototype.reflowCells = function() {
+  var self = this;
+  this.cells.forEach(function(cell) {
+    if (cell.fillContainer) {
+      cell.options.width = self.tableCloth.$el.clientWidth;
+    }
+  });
+  this.renderCells();
+}
+
+/**
  * add a cell to the cell manager instance at a given index
  * @param {tableCloth cell} cell  the cell to add
  * @param {int} index the index at which to add the cell
@@ -2840,6 +2913,54 @@ basicCellManager.prototype.addCellAtIndex = function(cell,index) {
   return this;
 }
 
+
+/**
+ * utility to find the approximate start of cells in the viewport
+ */
+basicCellManager.prototype.findApproximateViewportCells = function() {
+  // make an intelligent guess as to where we need to start looking at cells
+  // in the array of cells
+  var viewportCells;
+  var averageCellHeight = this.cellsHeight / this.cells.length;
+  var aproximateCellsAboveViewport = this.scrollPosition / averageCellHeight - 20;
+  if (aproximateCellsAboveViewport <= 0) {
+    aproximateCellsAboveViewport = 0;
+  }
+
+  var aproximateCellsInViewport = (this.tableCloth.options.height)
+                                    / averageCellHeight + 20;
+
+  viewportCells = this.cells.slice(Math.floor(aproximateCellsAboveViewport),
+          Math.ceil(aproximateCellsAboveViewport + aproximateCellsInViewport));
+
+  return viewportCells;
+}
+
+/**
+ * determines the cell in which an x,y position falls when the scrollPosition is
+ * taken into account
+ * @param {float} x the x position to use
+ * @param {float} y the y position to use
+ *
+ */
+basicCellManager.prototype.findCellAtPosition = function(x,y) {
+  var scrollPos = this.scrollPosition;
+  var cellsToCheck = this.findApproximateViewportCells();
+  var foundCell = null;
+  for (var i = 0; i < cellsToCheck.length; i++) {
+    var cell = cellsToCheck[i];
+    if (cell.options.x < x && cell.options.x + cell.options.width > x) {
+      if (cell.options.y -  scrollPos < y &&
+          cell.options.y + cell.options.height - scrollPos > y) {
+            foundCell = cell;
+            break;
+      }
+    }
+  }
+
+  return foundCell;
+}
+
 /**
  * determines the x and y positions of all the cells given their ordering
  * in the cells array
@@ -2848,7 +2969,8 @@ basicCellManager.prototype.addCellAtIndex = function(cell,index) {
 basicCellManager.prototype.positionCells = function() {
   var self = this;
   this.cellsHeight = 0;
-  this.cells.forEach(function(cell){
+  this.cells.forEach(function(cell,i){
+    cell.options.index = i;
     cell.options.y = self.cellsHeight;
     self.cellsHeight += cell.options.height;
   });
@@ -2883,22 +3005,17 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
 
   // make an intelligent guess as to where we need to start looking at cells
   // in the array of cells
-  var cellsToRender;
-  if (this.scrollPosition > 100) {
-    var averageCellHeight = this.cellsHeight / this.cells.length;
-    var aproximateCellsAboveViewport = this.scrollPosition / averageCellHeight - 2;
-    cellsToRender = this.cells.slice(Math.floor(aproximateCellsAboveViewport),
-                                          this.cells.length);
-  } else {
-    cellsToRender = this.cells;
-  }
+  var cellsToRender = this.findApproximateViewportCells();
 
   // render cells
   cellsToRender.some(function (cell) {
-
+    var highlight = false;
     // only render the cell if it is in the viewport
     if (cell.options.y + cell.options.height > self.scrollPosition) {
-        cell.render(self.tableCloth,0,self.scrollPosition);
+        if (cell.options.index === self.hoveredCellIndex){
+          highlight = true;
+        }
+        cell.render(self.tableCloth,0,self.scrollPosition,highlight);
     }
 
     // stop inspecting cells once we are below the viewport
@@ -2912,7 +3029,7 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
 
 module.exports = basicCellManager;
 
-},{"../util":14,"ease-component":2,"hammerjs":3}],8:[function(require,module,exports){
+},{"../util":16,"ease-component":2,"hammerjs":3}],8:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 
 module.exports = {
@@ -2920,6 +3037,54 @@ module.exports = {
 }
 
 },{"./basicCellManager":7}],9:[function(require,module,exports){
+/***********************
+ * Basic Mouse Manager *
+ ***********************/
+
+/**
+ * the default mouse and touch event manager to handle clicks
+ * @param {tableCloth} tableCloth the tableCloth instance to attach the manager to
+ * @return {basicMouseManager}
+ */
+var basicMouseManager = function(tableCloth) {
+  tableCloth.viewport.can.$el.addEventListener('mousemove', function(ev){
+    // get the position relative to the top left of the canvas
+    var rect = tableCloth.viewport.can.getBoundingClientRect();
+    var position = {
+      x: ev.clientX - rect.left,
+      y: ev.clientY - rect.top
+    };
+
+    var hoveredCell = tableCloth.cellManager.findCellAtPosition(position.x,position.y);
+    tableCloth.cellManager.hoveredCellIndex = hoveredCell.options.index;
+    tableCloth.cellManager.renderCells();
+  });
+
+  tableCloth.viewport.can.$el.addEventListener('mousedown', function(ev){
+    var rect = tableCloth.viewport.can.getBoundingClientRect();
+    var position = {
+      x: ev.clientX - rect.left,
+      y: ev.clientY - rect.top
+    };
+
+    var clickedCell = tableCloth.cellManager.findCellAtPosition(position.x,position.y);
+    clickedCell.click();
+  });
+
+
+  return this;
+}
+
+module.exports = basicMouseManager;
+
+},{}],10:[function(require,module,exports){
+basicMouseManager = require('./basicMouseManager');
+
+module.exports = {
+  basicMouseManager: basicMouseManager
+}
+
+},{"./basicMouseManager":9}],11:[function(require,module,exports){
 /*******************************
  * option processing utilities *
  *******************************/
@@ -2929,6 +3094,7 @@ function configure(options) {
   options.height = (options.height === undefined) ? 500 : options.height;
   options.width = (options.width === undefined) ? 500 : options.width;
   options.bgColor = (options.bgColor === undefined) ? '#EEEEEE' : options.bgColor;
+  options.fillContainer = (options.fillContainer === undefined) ? true : options.fillContainer;
 
   return options;
 }
@@ -2937,7 +3103,7 @@ module.exports = {
   configure: configure
 }
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict'
 var background = require('./render/background');
 
@@ -2945,7 +3111,7 @@ module.exports = {
   background: background.main
 }
 
-},{"./render/background":11}],11:[function(require,module,exports){
+},{"./render/background":13}],13:[function(require,module,exports){
 'use strict'
 /*******************************
  * Background render utilities *
@@ -2981,7 +3147,7 @@ module.exports = {
   main: main
 }
 
-},{"../util":14}],12:[function(require,module,exports){
+},{"../util":16}],14:[function(require,module,exports){
 /**************************
  * Basic Scroll Manager   *
  **************************/
@@ -3054,14 +3220,14 @@ basicScrollManager.prototype.scrollToPosition = function(y, duration, easeName) 
 
 module.exports = basicScrollManager;
 
-},{"ease-component":2,"hammerjs":3}],13:[function(require,module,exports){
+},{"ease-component":2,"hammerjs":3}],15:[function(require,module,exports){
 var basicScrollManager = require('./basicScrollManager');
 
 module.exports = {
   basicScrollManager: basicScrollManager
 }
 
-},{"./basicScrollManager":12}],14:[function(require,module,exports){
+},{"./basicScrollManager":14}],16:[function(require,module,exports){
 /**
  * grab the current browser's pixel ratio
  * http://www.html5rocks.com/en/tutorials/canvas/hidpi/
@@ -3082,7 +3248,7 @@ module.exports = {
   getPixelRatio: getPixelRatio
 }
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 /**********************
  * Viewport functions *
@@ -3160,6 +3326,6 @@ module.exports = {
   animateToHeight: animateToHeight
 }
 
-},{"./render":10,"./util":14,"ease-component":2}]},{},[1]);
+},{"./render":12,"./util":16,"ease-component":2}]},{},[1]);
 
 //# sourceMappingURL=bundle.js.map

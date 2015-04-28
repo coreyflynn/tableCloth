@@ -15,22 +15,31 @@ var basicCell = function(options) {
 
 }
 
-basicCell.prototype.render = function(tableCloth,xOffset,yOffset) {
+basicCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
   var height = this.options.height;
   var width = this.options.width;
   var pixelRatio = util.getPixelRatio();
 
+  tableCloth.viewport.ctx.globalAlpha = this.options.opacity;
   tableCloth.viewport.ctx.beginPath();
   tableCloth.viewport.ctx.rect(this.options.x + xOffset,
                                 this.options.y - yOffset,
                                 width * pixelRatio,
                                 height * pixelRatio);
   tableCloth.viewport.ctx.fillStyle = this.options.bgColor;
+  if (highlight) {
+    tableCloth.viewport.ctx.globalAlpha = 0.5;
+  } else {
+    tableCloth.viewport.ctx.globalAlpha = 1;
+  }
   tableCloth.viewport.ctx.fill();
-
-  // tableCloth.viewport.ctx.scale(1 / pixelRatio, 1 / pixelRatio);
+  tableCloth.viewport.ctx.globalAlpha = 1;
 
   return tableCloth
+}
+
+basicCell.prototype.click = function() {
+  return this;
 }
 
 basicCell.prototype.animateToHeight = function(tableCloth,
@@ -48,6 +57,34 @@ basicCell.prototype.animateToHeight = function(tableCloth,
     var timeDiff =  now - start;
     var proportion = timeDiff / duration;
     self.options.height = startingHeight + easing(proportion) * delta;
+
+    window.requestAnimationFrame(function() {
+      tableCloth.cellManager.positionCells();
+      tableCloth.cellManager.renderCells();
+    });
+
+    if (timeDiff >= duration) {
+      clearInterval(int);
+    }
+
+  },1);
+}
+
+basicCell.prototype.animateToOpacity = function(tableCloth,
+                                                opacity, duration, easeName) {
+  var self = this;
+  var start = new Date().getTime();
+  var startingOpacity = this.options.opacity;
+  var delta = opacity - startingOpacity;
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
+
+  var timer = 0;
+  var int = setInterval(function() {
+
+    var now = new Date().getTime();
+    var timeDiff =  now - start;
+    var proportion = timeDiff / duration;
+    self.options.opacity = startingOpacity + easing(proportion) * delta;
 
     window.requestAnimationFrame(function() {
       tableCloth.cellManager.positionCells();
