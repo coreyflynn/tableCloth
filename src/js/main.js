@@ -2,6 +2,7 @@ var coreOptions = require('./core/options');
 var coreViewport = require('./core/viewport');
 var coreCellManager = require('./core/cellManager');
 var coreScrollManager = require('./core/scrollManager');
+var coreMouseManager = require('./core/mouseManager');
 var coreCell = require('./core/cell');
 
 /**
@@ -20,6 +21,12 @@ var tableCloth = function(target,options) {
   // configure base options
   this.options = coreOptions.configure(this.options);
 
+  // if the fillContainer option is set, expand the tableCloth instance to fill its
+  // container
+  if (this.options.fillContainer) {
+    this.options.width = this.$el.clientWidth;
+  }
+
   // attach a top level canvas element to serve as the tableCloth viewport
   coreViewport.attach(this);
 
@@ -29,9 +36,18 @@ var tableCloth = function(target,options) {
   // attach a scroll manager
   this.scrollManager = new coreScrollManager.basicScrollManager(this.cellManager);
 
+  // attach a mouse manager
+  this.mouseManager = new coreMouseManager.basicMouseManager(this);
+
   // attach a cell factory method
   this.cellFactory = {};
   this.cellFactory.basicCell = coreCell.basicCell;
+
+  // listen for resize events on the window and reflow cells
+  var self = this;
+  window.onresize = function() {
+    self.cellManager.reflowCells();
+  }
 
 }
 

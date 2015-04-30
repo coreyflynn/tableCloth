@@ -10,6 +10,9 @@ function configure(options) {
   options.x = (options.x === undefined) ? 0 : options.x;
   options.y = (options.y === undefined) ? 0 : options.y;
   options.index = (options.index === undefined) ? 0 : options.index;
+  options.highlight = (options.highlight === undefined) ? false : options.highlight;
+  options.opacity = (options.opacity === undefined) ? 1 : options.opacity;
+  options.fillContainer = (options.fillContainer === undefined) ? true : options.fillContainer;
 
   return options;
 }
