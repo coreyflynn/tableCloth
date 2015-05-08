@@ -38,6 +38,7 @@ basicCellManager.prototype.addCell = function(cell,duration) {
   cell.options.index = this.cells.length;
   this.cells.push(cell);
   this.cellsHeight += cell.options.height;
+
   if (duration) {
     cell.animateToHeight(this.tableCloth,targetHeight,duration);
   } else {
@@ -54,11 +55,13 @@ basicCellManager.prototype.addCell = function(cell,duration) {
 basicCellManager.prototype.reflowCells = function() {
   var self = this;
   this.cells.forEach(function(cell) {
-    if (cell.fillContainer) {
+    if (cell.options.fillContainer) {
       cell.options.width = self.tableCloth.$el.clientWidth;
     }
   });
   this.renderCells();
+
+  return this
 }
 
 /**
@@ -69,7 +72,7 @@ basicCellManager.prototype.reflowCells = function() {
  */
 basicCellManager.prototype.addCellAtIndex = function(cell,index) {
   this.cells.splice(index,0,cell);
-  this.positionCells().renderCells();
+  this.positionCells().reflowCells().renderCells();
   return this;
 }
 
@@ -88,7 +91,7 @@ basicCellManager.prototype.findApproximateViewportCells = function() {
   }
 
   var aproximateCellsInViewport = (this.tableCloth.options.height)
-                                    / averageCellHeight + 20;
+                                    / averageCellHeight + 40;
 
   viewportCells = this.cells.slice(Math.floor(aproximateCellsAboveViewport),
           Math.ceil(aproximateCellsAboveViewport + aproximateCellsInViewport));
@@ -158,8 +161,9 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
   var viewportWidth = this.tableCloth.options.width;
   var pixelRatio = util.getPixelRatio();
 
-  this.tableCloth.viewport.can.width = viewportWidth;
-  this.tableCloth.viewport.can.height = viewportHeight;
+  this.tableCloth.viewport.ctx.setTransform(1,0,0, 1,0,0);
+  this.tableCloth.viewport.can.width = viewportWidth * pixelRatio;
+  this.tableCloth.viewport.can.height = viewportHeight * pixelRatio;
   this.tableCloth.viewport.can.style.width = viewportWidth + 'px';
   this.tableCloth.viewport.can.style.height = viewportHeight + 'px';
 
@@ -182,7 +186,29 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
     return cell.options.y > self.scrollPosition + self.tableCloth.options.height;
   });
 
-  this.tableCloth.viewport.ctx.scale(1 / pixelRatio, 1 / pixelRatio);
+  this.tableCloth.viewport.ctx.setTransform(1 / pixelRatio,0,0, 1 / pixelRatio,0,0);
+
+  return this;
+}
+
+/**
+ * sorts the cells in the cell manager by their value of the given options field
+ * @param {string} field     the field to sort on
+ * @param {[boolean]} ascending set to true for an ascending sort. defaults to
+ *                              false
+ */
+basicCellManager.prototype.sortByField = function(field, ascending) {
+  // sort the cells
+  this.cells.sort(function(a,b){
+    if (ascending) {
+      return a.options[field] - b.options[field];
+    } else {
+      return b.options[field] - a.options[field];
+    }
+  });
+
+  // position, reflow, and render
+  this.positionCells().reflowCells().renderCells();
 
   return this;
 }

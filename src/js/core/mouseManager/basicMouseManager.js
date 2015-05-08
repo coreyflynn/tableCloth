@@ -1,7 +1,7 @@
 /***********************
  * Basic Mouse Manager *
  ***********************/
-
+var util = require('../util');
 /**
  * the default mouse and touch event manager to handle clicks
  * @param {tableCloth} tableCloth the tableCloth instance to attach the manager to

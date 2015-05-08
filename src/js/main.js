@@ -41,7 +41,7 @@ var tableCloth = function(target,options) {
 
   // attach a cell factory method
   this.cellFactory = {};
-  this.cellFactory.basicCell = coreCell.basicCell;
+  this.cellFactory = coreCell;
 
   // listen for resize events on the window and reflow cells
   var self = this;

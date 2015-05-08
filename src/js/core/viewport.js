@@ -13,7 +13,8 @@
  * @return {tableCloth}            the attached tableCloth instance
  */
 function attach(tableCloth) {
-  // get the pixelRatio
+  var height = tableCloth.options.height;
+  var width = tableCloth.options.width;
   var pixelRatio = util.getPixelRatio();
 
   // generate a timestamped id for the tableCloth instance
@@ -22,6 +23,10 @@ function attach(tableCloth) {
   // build the viewport object and add it to the tableCloth instance
   tableCloth.viewport = {};
   tableCloth.viewport.can = document.createElement('canvas');
+  tableCloth.viewport.can.width = width * pixelRatio;
+  tableCloth.viewport.can.height = height * pixelRatio;
+  tableCloth.viewport.can.style.width = width + 'px';
+  tableCloth.viewport.can.style.height = height + 'px';
   tableCloth.viewport.can.id = tableCloth.id + 'viewport';
   tableCloth.viewport.can.setAttribute('data-height', tableCloth.options.height);
   tableCloth.viewport.can.classList.add('tableCloth');
@@ -32,6 +37,7 @@ function attach(tableCloth) {
   // add the 2d context to the viewport
   tableCloth.viewport.can.$el = document.getElementById(tableCloth.viewport.can.id);
   tableCloth.viewport.ctx = tableCloth.viewport.can.$el.getContext('2d');
+  tableCloth.viewport.ctx.setTransform(1 / pixelRatio,0,0, 1 / pixelRatio,0,0);
 
 
 
