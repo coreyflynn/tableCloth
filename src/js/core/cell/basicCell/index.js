@@ -23,6 +23,12 @@ basicCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
   // draw the background of the cell
   render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
               this.options.y - yOffset,width,height,this.options.bgColor);
+
+  // draw the label
+  render.text(tableCloth.viewport.ctx,this.options.label,
+              this.options.x + xOffset + 40,
+              this.options.y - yOffset + 19);
+
   if (highlight) {
     this.renderHighlight(tableCloth,xOffset,yOffset,highlight);
   }
