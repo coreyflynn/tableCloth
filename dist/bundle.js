@@ -32,7 +32,8 @@ var tableCloth = function(target,options) {
   coreViewport.attach(this);
 
   // attach a cell manager
-  this.cellManager = new coreCellManager.basicCellManager(this);
+  console.log(coreCellManager);
+  this.cellManager = new coreCellManager[this.options.cellManager](this);
 
   // attach a scroll manager
   this.scrollManager = new coreScrollManager.basicScrollManager(this.cellManager);
@@ -66,7 +67,7 @@ if (window) {
   window.tableCloth = tableCloth
 }
 
-},{"./core/cell":7,"./core/cellManager":11,"./core/mouseManager":13,"./core/options":14,"./core/scrollManager":23,"./core/viewport":25}],2:[function(require,module,exports){
+},{"./core/cell":7,"./core/cellManager":11,"./core/mouseManager":14,"./core/options":15,"./core/scrollManager":24,"./core/viewport":26}],2:[function(require,module,exports){
 module.exports = function() {
   var d3 = {
     version: "3.4.11"
@@ -12048,7 +12049,7 @@ basicCell.prototype.animateToOpacity = function(tableCloth,
 
 module.exports = basicCell;
 
-},{"../../render/index":18,"../../util":24,"./options":6,"ease-component":3}],6:[function(require,module,exports){
+},{"../../render/index":19,"../../util":25,"./options":6,"ease-component":3}],6:[function(require,module,exports){
 /****************************************
  * cell option processing utilities   *
  **************************************/
@@ -12091,9 +12092,8 @@ var basicCell = require('../basicCell');
 var cellOptions = require('./options');
 var util = require('../../util');
 var render = require('../../render/index');
+var ease = require('ease-component');
 var d3 = require('d3-browserify');
-
-console.log(render);
 
 var queryResultViewerBodyCell = function(options) {
   // configure the basic options for the cell
@@ -12173,7 +12173,6 @@ queryResultViewerBodyCell.prototype.renderHighlight = function(tableCloth,xOffse
 }
 
 queryResultViewerBodyCell.prototype.renderTailBoundaries = function(tableCloth, xOffset, yOffset) {
-  this.setScale();
   var self = this;
   bounds = [-100,-90,90,100];
   bounds.forEach(function(bound){
@@ -12210,9 +12209,68 @@ queryResultViewerBodyCell.prototype.setScale = function(domain, range) {
   return this;
 }
 
+/**
+ * Animate the scale to the input domain and range. The length of the domain
+ * and range arrays must match that of the
+ * @param {tableCloth} The tableCloth instance to use when rendering
+ * @param {array} domain an array that describes the input domain of the scale
+ * @param {array} range  an array that describs the output range of the scale
+ * @return {queryResultViewerBodyCell}
+ */
+queryResultViewerBodyCell.prototype.animateToScale = function(tableCloth,
+                                          domain, range, easeName) {
+  var self = this;
+  var start = new Date().getTime();
+  var tmpDomain, tmpRange;
+
+  // calculate the domain delta
+  var startingDomain = this.scale.domain;
+  deltaDomain = [];
+  startingDomain.forEach(function(d,i){
+    deltaDomain.push(domain[i] - d);
+  });
+
+  // calculate the range delta
+  var startingRange = this.scale.range;
+  deltaRange = [];
+  startingRange.forEach(function(d,i){
+    deltaRange.push(range[i] - d);
+  });
+
+  // set the easing function to use
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
+
+  // set up and setInterval to render the animation until it is complete
+  var timer = 0;
+  var int = setInterval(function() {
+    window.requestAnimationFrame(function() {
+      var now = new Date().getTime();
+      var timeDiff =  now - start;
+      var proportion = timeDiff / duration;
+
+      // grab the eased domain and range
+      for (var i = 0; i < domain.length; i++) {
+        tmpDomain = tmpRange = [];
+        tmpDomain[i].push(startingDomain[i] + easing(proportion) * delta);
+        tmpRange[i].push(startingRange[i] + easing(proportion) * delta);
+      }
+
+      tableCloth.cellManager.positionCells();
+      tableCloth.cellManager.renderCells();
+    });
+
+    if (timeDiff >= duration) {
+      clearInterval(int);
+    }
+
+  },1);
+
+  return this;
+}
+
 module.exports = queryResultViewerBodyCell;
 
-},{"../../render/index":18,"../../util":24,"../basicCell":5,"./options":9,"d3-browserify":2}],9:[function(require,module,exports){
+},{"../../render/index":19,"../../util":25,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
 /*********************************************************
  * queryResultViewerBodyCell option processing utilities *
  *********************************************************/
@@ -12448,14 +12506,111 @@ basicCellManager.prototype.sortByField = function(field, ascending) {
 
 module.exports = basicCellManager;
 
-},{"../util":24,"ease-component":3,"hammerjs":4}],11:[function(require,module,exports){
+},{"../util":25,"ease-component":3,"hammerjs":4}],11:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
+var queryResultViewerCellManager = require('./queryResultViewerCellManager');
 
 module.exports = {
-  basicCellManager: basicCellManager
+  basicCellManager: basicCellManager,
+  queryResultViewerCellManager: queryResultViewerCellManager
 }
 
-},{"./basicCellManager":10}],12:[function(require,module,exports){
+},{"./basicCellManager":10,"./queryResultViewerCellManager":12}],12:[function(require,module,exports){
+var basicCellManager = require('./basicCellManager');
+var ease = require('ease-component');
+
+var queryResultViewerCellManager = function(tableCloth){
+  this.constructor(tableCloth);
+}
+
+queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
+queryResultViewerCellManager.prototype.constructor = basicCellManager;
+
+/**
+ * sets the scale of all cells in the cellManager
+ * @param {array} domain an array that describes the input domain of the scale
+ * @param {array} range  an array that describs the output range of the scale
+ * @return {queryResultViewerCellManagerl}
+ */
+queryResultViewerCellManager.prototype.setScale = function(domain,range) {
+  this.cells.forEach(function(cell) {
+    cell.setScale(domain,range);
+  });
+  return this;
+}
+
+/**
+ * Animate the scale to the input domain and range. The length of the domain
+ * and range arrays must match that of the
+ * @param {tableCloth} The tableCloth instance to use when rendering
+ * @param {array} domain an array that describes the input domain of the scale
+ * @param {array} range  an array that describs the output range of the scale
+ * @return {queryResultViewerCellManagerl}
+ */
+queryResultViewerCellManager.prototype.animateToScale = function(domain,
+                                                              range,
+                                                              duration,
+                                                              easeName) {
+  var self = this;
+  var start = new Date().getTime();
+  var tmpDomain, tmpRange;
+
+  // calculate the domain delta
+  var startingDomain = this.cells[0].scale.domain();
+  deltaDomain = [];
+  startingDomain.forEach(function(d,i){
+    deltaDomain.push(domain[i] - d);
+  });
+
+  // calculate the range delta
+  var startingRange = this.cells[0].scale.range();
+  deltaRange = [];
+  startingRange.forEach(function(d,i){
+    deltaRange.push(range[i] - d);
+  });
+
+  // find the cells that we need to animate
+  var cellsToAnimate = this.findApproximateViewportCells();
+
+  // set the easing function to use
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
+
+  // set up and setInterval to render the animation until it is complete
+  var timer = 0;
+  var int = setInterval(function() {
+    window.requestAnimationFrame(function() {
+      var now = new Date().getTime();
+      var timeDiff =  now - start;
+      var proportion = timeDiff / duration;
+
+      // grab the eased domain and range
+      tmpDomain = [];
+      tmpRange = [];
+      for (var i = 0; i < domain.length; i++) {
+        tmpDomain.push(startingDomain[i] + easing(proportion) * deltaDomain[i]);
+        tmpRange.push(startingRange[i] + easing(proportion) * deltaRange[i]);
+      }
+
+      // set the scale for all of the cells and render them;
+      cellsToAnimate.forEach(function(cell){
+        cell.setScale(tmpDomain,tmpRange);
+      })
+      self.renderCells();
+
+      if (timeDiff >= duration) {
+        clearInterval(int);
+        self.setScale(domain,range);
+      }
+    });
+
+  },1);
+
+  return this;
+}
+
+module.exports = queryResultViewerCellManager;
+
+},{"./basicCellManager":10,"ease-component":3}],13:[function(require,module,exports){
 /***********************
  * Basic Mouse Manager *
  ***********************/
@@ -12496,14 +12651,14 @@ var basicMouseManager = function(tableCloth) {
 
 module.exports = basicMouseManager;
 
-},{"../util":24}],13:[function(require,module,exports){
+},{"../util":25}],14:[function(require,module,exports){
 basicMouseManager = require('./basicMouseManager');
 
 module.exports = {
   basicMouseManager: basicMouseManager
 }
 
-},{"./basicMouseManager":12}],14:[function(require,module,exports){
+},{"./basicMouseManager":13}],15:[function(require,module,exports){
 /*******************************
  * option processing utilities *
  *******************************/
@@ -12514,6 +12669,7 @@ function configure(options) {
   options.width = (options.width === undefined) ? 500 : options.width;
   options.bgColor = (options.bgColor === undefined) ? '#EEEEEE' : options.bgColor;
   options.fillContainer = (options.fillContainer === undefined) ? true : options.fillContainer;
+  options.cellManager = (options.cellManager === undefined) ? 'basicCellManager' : options.cellManager;
 
   return options;
 }
@@ -12522,7 +12678,7 @@ module.exports = {
   configure: configure
 }
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict'
 var background = require('./render/background');
 
@@ -12530,7 +12686,7 @@ module.exports = {
   background: background.main
 }
 
-},{"./render/background":16}],16:[function(require,module,exports){
+},{"./render/background":17}],17:[function(require,module,exports){
 'use strict'
 /*******************************
  * Background render utilities *
@@ -12567,7 +12723,7 @@ module.exports = {
   main: main
 }
 
-},{"../util":24}],17:[function(require,module,exports){
+},{"../util":25}],18:[function(require,module,exports){
 var util = require('../util');
 
 function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
@@ -12592,7 +12748,7 @@ function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
 
 module.exports = dashedLine;
 
-},{"../util":24}],18:[function(require,module,exports){
+},{"../util":25}],19:[function(require,module,exports){
 /***********************
  * Rendering utilities *
  ***********************/
@@ -12605,7 +12761,7 @@ render.dashedLine = require('./dashedLine');
 
 module.exports = render;
 
-},{"./background":16,"./dashedLine":17,"./rect":19,"./roundRect":20,"./text":21}],19:[function(require,module,exports){
+},{"./background":17,"./dashedLine":18,"./rect":20,"./roundRect":21,"./text":22}],20:[function(require,module,exports){
 /********************************
  * Utility to render rectangles *
  ********************************/
@@ -12637,7 +12793,7 @@ function rect(ctx,x,y,width, height, fillStyle, globalAlpha) {
 
 module.exports = rect;
 
-},{"../util":24}],20:[function(require,module,exports){
+},{"../util":25}],21:[function(require,module,exports){
 /**
  * Draws a rounded rectangle using the current state of the canvas.
  * If you omit the last three params, it will draw a rectangle
@@ -12679,7 +12835,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 
 module.exports = roundRect;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 var util = require('../util');
 
 function text(ctx,string,x,y,fillStyle,font) {
@@ -12696,7 +12852,7 @@ function text(ctx,string,x,y,fillStyle,font) {
 
 module.exports = text
 
-},{"../util":24}],22:[function(require,module,exports){
+},{"../util":25}],23:[function(require,module,exports){
 /**************************
  * Basic Scroll Manager   *
  **************************/
@@ -12769,14 +12925,14 @@ basicScrollManager.prototype.scrollToPosition = function(y, duration, easeName) 
 
 module.exports = basicScrollManager;
 
-},{"ease-component":3,"hammerjs":4}],23:[function(require,module,exports){
+},{"ease-component":3,"hammerjs":4}],24:[function(require,module,exports){
 var basicScrollManager = require('./basicScrollManager');
 
 module.exports = {
   basicScrollManager: basicScrollManager
 }
 
-},{"./basicScrollManager":22}],24:[function(require,module,exports){
+},{"./basicScrollManager":23}],25:[function(require,module,exports){
 /**
  * grab the current browser's pixel ratio
  * http://www.html5rocks.com/en/tutorials/canvas/hidpi/
@@ -12797,7 +12953,7 @@ module.exports = {
   getPixelRatio: getPixelRatio
 }
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 /**********************
  * Viewport functions *
@@ -12881,6 +13037,6 @@ module.exports = {
   animateToHeight: animateToHeight
 }
 
-},{"./render":15,"./util":24,"ease-component":3}]},{},[1]);
+},{"./render":16,"./util":25,"ease-component":3}]},{},[1]);
 
 //# sourceMappingURL=bundle.js.map

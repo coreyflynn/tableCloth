@@ -8,6 +8,7 @@ function configure(options) {
   options.width = (options.width === undefined) ? 500 : options.width;
   options.bgColor = (options.bgColor === undefined) ? '#EEEEEE' : options.bgColor;
   options.fillContainer = (options.fillContainer === undefined) ? true : options.fillContainer;
+  options.cellManager = (options.cellManager === undefined) ? 'basicCellManager' : options.cellManager;
 
   return options;
 }

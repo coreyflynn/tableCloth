@@ -1,4 +1,4 @@
-tc = new tableCloth('target',{});
+tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
 
 tc.cellFactory.queryResultViewerBodyCell.prototype.click = function(){addAFew(this.options.index + 1)}
 
@@ -12,8 +12,9 @@ var int = setInterval(function(){
   }
 
   count += 1;
-  if (count >= 1) {
+  if (count >= 100) {
     clearInterval(int);
+    console.log('done adding cells');
   }
 },100);
 

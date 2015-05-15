@@ -6,9 +6,8 @@ var basicCell = require('../basicCell');
 var cellOptions = require('./options');
 var util = require('../../util');
 var render = require('../../render/index');
+var ease = require('ease-component');
 var d3 = require('d3-browserify');
-
-console.log(render);
 
 var queryResultViewerBodyCell = function(options) {
   // configure the basic options for the cell
@@ -88,7 +87,6 @@ queryResultViewerBodyCell.prototype.renderHighlight = function(tableCloth,xOffse
 }
 
 queryResultViewerBodyCell.prototype.renderTailBoundaries = function(tableCloth, xOffset, yOffset) {
-  this.setScale();
   var self = this;
   bounds = [-100,-90,90,100];
   bounds.forEach(function(bound){
@@ -121,6 +119,65 @@ queryResultViewerBodyCell.prototype.setScale = function(domain, range) {
                   .domain([-100, -90, 90, 100])
                   .range([start, unit * 10 + 200, unit * 190 + 200, end]);
   }
+
+  return this;
+}
+
+/**
+ * Animate the scale to the input domain and range. The length of the domain
+ * and range arrays must match that of the
+ * @param {tableCloth} The tableCloth instance to use when rendering
+ * @param {array} domain an array that describes the input domain of the scale
+ * @param {array} range  an array that describs the output range of the scale
+ * @return {queryResultViewerBodyCell}
+ */
+queryResultViewerBodyCell.prototype.animateToScale = function(tableCloth,
+                                          domain, range, easeName) {
+  var self = this;
+  var start = new Date().getTime();
+  var tmpDomain, tmpRange;
+
+  // calculate the domain delta
+  var startingDomain = this.scale.domain;
+  deltaDomain = [];
+  startingDomain.forEach(function(d,i){
+    deltaDomain.push(domain[i] - d);
+  });
+
+  // calculate the range delta
+  var startingRange = this.scale.range;
+  deltaRange = [];
+  startingRange.forEach(function(d,i){
+    deltaRange.push(range[i] - d);
+  });
+
+  // set the easing function to use
+  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
+
+  // set up and setInterval to render the animation until it is complete
+  var timer = 0;
+  var int = setInterval(function() {
+    window.requestAnimationFrame(function() {
+      var now = new Date().getTime();
+      var timeDiff =  now - start;
+      var proportion = timeDiff / duration;
+
+      // grab the eased domain and range
+      for (var i = 0; i < domain.length; i++) {
+        tmpDomain = tmpRange = [];
+        tmpDomain[i].push(startingDomain[i] + easing(proportion) * delta);
+        tmpRange[i].push(startingRange[i] + easing(proportion) * delta);
+      }
+
+      tableCloth.cellManager.positionCells();
+      tableCloth.cellManager.renderCells();
+    });
+
+    if (timeDiff >= duration) {
+      clearInterval(int);
+    }
+
+  },1);
 
   return this;
 }

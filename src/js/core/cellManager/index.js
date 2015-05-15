@@ -1,5 +1,7 @@
 var basicCellManager = require('./basicCellManager');
+var queryResultViewerCellManager = require('./queryResultViewerCellManager');
 
 module.exports = {
-  basicCellManager: basicCellManager
+  basicCellManager: basicCellManager,
+  queryResultViewerCellManager: queryResultViewerCellManager
 }
