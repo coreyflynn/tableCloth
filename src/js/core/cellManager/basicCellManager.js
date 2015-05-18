@@ -45,7 +45,6 @@ basicCellManager.prototype.addCell = function(cell,duration) {
     this.renderCells();
   }
 
-
   return this
 }
 

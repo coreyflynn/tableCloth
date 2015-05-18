@@ -9,6 +9,22 @@ queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototyp
 queryResultViewerCellManager.prototype.constructor = basicCellManager;
 
 /**
+ * add cell to the cell manager instance at the end of the cell array
+ * @param {tableCloth cell} cell the cell to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 1ms
+ * @return {tableCloth queryResultViewerCellManager}
+ */
+queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
+  if (cell.options.fillContainer) {
+    cell.options.width = this.tableCloth.$el.clientWidth;
+  }
+  cell.setScale();
+  this.constructor.prototype.addCell.call(this,cell,duration);
+  return this;
+}
+
+/**
  * sets the scale of all cells in the cellManager
  * @param {array} domain an array that describes the input domain of the scale
  * @param {array} range  an array that describs the output range of the scale

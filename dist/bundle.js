@@ -12112,12 +12112,10 @@ queryResultViewerBodyCell.prototype.constructor = basicCell;
 
 
 queryResultViewerBodyCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
-  var height = this.options.height;
-  var width = this.options.width;
 
   // render the background of the cell
   render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
-              this.options.y - yOffset,width,height,'#EEEEEE');
+              this.options.y - yOffset,this.options.width,this.options.height,'#EEEEEE');
 
   if (highlight) {
     this.renderHighlight(tableCloth,xOffset,yOffset,highlight);
@@ -12132,42 +12130,40 @@ queryResultViewerBodyCell.prototype.render = function(tableCloth,xOffset,yOffset
   render.rect(tableCloth.viewport.ctx,
               this.options.x + xOffset + 33,
               this.options.y - yOffset,
-              5,height,this.options.cellColor);
+              5,this.options.height,this.options.cellColor);
 
   // render the score text for the row
   render.text(tableCloth.viewport.ctx, this.options.score.toFixed(2),
               this.options.width - 60,
               this.options.y - yOffset + 19,
               '#BDBDBD');
+
   // render the score indicator for the row
   render.rect(tableCloth.viewport.ctx,
               this.scale(this.options.score) + xOffset,
               this.options.y - yOffset,
-              2, height, this.options.cellColor);
+              2, this.options.height, this.options.cellColor);
 
   // render an overlay to emphasize the |90 - 100| scores
   render.rect(tableCloth.viewport.ctx,
               this.scale(-90) + xOffset,
               this.options.y - yOffset,
               this.scale(90) - this.scale(-90),
-              height, '#EEEEEE', 0.8);
+              this.options.height, '#EEEEEE', 0.8);
 
   // render the tail display for the window
   this.renderTailBoundaries(tableCloth, xOffset, yOffset);
 
   // render the top border of the cell
   render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
-              this.options.y - yOffset,width,1,'white');
+              this.options.y - yOffset,this.options.width,1,'white');
 
   return this;
 }
 
 queryResultViewerBodyCell.prototype.renderHighlight = function(tableCloth,xOffset,yOffset,highlight){
-  var height = this.options.height;
-  var width = this.options.width;
-
   render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
-              this.options.y - yOffset,33,height,'#183b8e');
+              this.options.y - yOffset,33,this.options.height,'#183b8e');
 
   return this;
 }
@@ -12190,17 +12186,16 @@ queryResultViewerBodyCell.prototype.renderTailBoundaries = function(tableCloth, 
  * @return {queryResultViewerBodyCell}
  */
 queryResultViewerBodyCell.prototype.setScale = function(domain, range) {
-  var width = this.options.width;
-
   // if a domain and range are passed, use them. Otherwise set to a default
   if (domain && range) {
     this.scale = d3.scale.linear()
                   .domain(domain)
                   .range(range);
+
   } else {
     var start = 200;
-    var end = width - 102;
-    var unit = (width - 302) / 200;
+    var end = this.options.width - 102;
+    var unit = (this.options.width - 302) / 200;
     this.scale = d3.scale.linear()
                   .domain([-100, -90, 90, 100])
                   .range([start, unit * 10 + 200, unit * 190 + 200, end]);
@@ -12335,7 +12330,6 @@ basicCellManager.prototype.addCell = function(cell,duration) {
   } else {
     this.renderCells();
   }
-
 
   return this
 }
@@ -12525,6 +12519,22 @@ var queryResultViewerCellManager = function(tableCloth){
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
 queryResultViewerCellManager.prototype.constructor = basicCellManager;
+
+/**
+ * add cell to the cell manager instance at the end of the cell array
+ * @param {tableCloth cell} cell the cell to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 1ms
+ * @return {tableCloth queryResultViewerCellManager}
+ */
+queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
+  if (cell.options.fillContainer) {
+    cell.options.width = this.tableCloth.$el.clientWidth;
+  }
+  cell.setScale();
+  this.constructor.prototype.addCell.call(this,cell,duration);
+  return this;
+}
 
 /**
  * sets the scale of all cells in the cellManager
