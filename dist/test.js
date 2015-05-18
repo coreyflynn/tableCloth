@@ -24,10 +24,10 @@ function addAFew(index) {
   var cellsToAdd = [];
   for (var i = 0; i < 5; i++) {
     var color = colors[Math.floor(Math.random()*colors.length)];
-    cellsToAdd.push(new tc.cellFactory.basicCell({height: 0, bgColor: color}));
+    cellsToAdd.push(new tc.cellFactory.basicCell({bgColor: color}));
   }
   cellsToAdd.forEach(function(cell) {
-    tc.cellManager.addCellAtIndex(cell,index);
-    cell.animateToHeight(tc,24,600);
+    tc.cellManager.addCellAtIndex(cell,index,600);
+    // cell.animateToHeight(tc,24,600);
   });
 }

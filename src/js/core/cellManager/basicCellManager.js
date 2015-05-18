@@ -22,7 +22,7 @@ var basicCellManager = function(tableCloth) {
  * add cell to the cell manager instance at the end of the cell array
  * @param {tableCloth cell} cell the cell to add
  * @param {int} duration the duration in milliseconds for an animation when
- *                       adding the cell. Defaults to 1ms
+ *                       adding the cell. Defaults to 0ms
  * @return {tableCloth basicCellManager}
  */
 basicCellManager.prototype.addCell = function(cell,duration) {
@@ -67,11 +67,85 @@ basicCellManager.prototype.reflowCells = function() {
  * add a cell to the cell manager instance at a given index
  * @param {tableCloth cell} cell  the cell to add
  * @param {int} index the index at which to add the cell
- * @return {tableCloth basicCellManager}
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 0ms
+ * @return {basicCellManager}
  */
-basicCellManager.prototype.addCellAtIndex = function(cell,index) {
+basicCellManager.prototype.addCellAtIndex = function(cell,index,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  if (duration) {
+    var targetHeight = cell.options.height;
+    cell.options.height = 0;
+  }
+  if (cell.options.fillContainer) {
+    cell.options.width = this.tableCloth.$el.clientWidth;
+  }
   this.cells.splice(index,0,cell);
-  this.positionCells().reflowCells().renderCells();
+  this.cellsHeight += cell.options.height;
+
+  this.positionCells().reflowCells();
+
+  if (duration) {
+    cell.animateToHeight(this.tableCloth,targetHeight,duration);
+  } else {
+    this.renderCells();
+  }
+
+  return this;
+}
+
+/**
+ * removes a cell at the given index
+ * @param {int} index the index at which to add the cell
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       removing the cell. Defaults to 0ms.
+ * @return {basicCellManager}
+ */
+basicCellManager.prototype.removeCellAtIndex = function(index,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  if (duration) {
+    var cell = this.cells[index];
+    var targetHeight = 0;
+    cell.animateToHeight(this.tableCloth,targetHeight,duration);
+  }
+
+
+  setTimeout(function(){
+    this.cells.splice(index,1);
+    this.positionCells().reflowCells().renderCells();
+  }.bind(this),duration);
+
+  return this;
+}
+
+/**
+ * remove cells falling in the given index range
+ * @param {int} start    the start of the range
+ * @param {end} end      the end of the range
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       removing the cell. Defaults to 0ms.
+ * @return {basicCellManager}
+ */
+basicCellManager.prototype.removeCellsAtIndexRange = function(start,end,
+                                                              duration) {
+  var cells = this.cells.slice(start,end);
+  duration = (duration === undefined) ? 0 : duration;
+
+
+  if (duration) {
+    var targetHeight = 0;
+    cells.forEach(function(cell) {
+      cell.animateToHeight(this.tableCloth,targetHeight,duration);
+    }.bind(this));
+  }
+
+  setTimeout(function(){
+    this.cells.splice(start,cells.length);
+    this.positionCells().reflowCells().renderCells();
+  }.bind(this),duration);
+
   return this;
 }
 
