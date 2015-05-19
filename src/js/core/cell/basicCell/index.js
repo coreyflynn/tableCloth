@@ -75,7 +75,7 @@ basicCell.prototype.animateToHeight = function(tableCloth,
       clearInterval(int);
     }
 
-  },1);
+  },16);
 }
 
 basicCell.prototype.animateToOpacity = function(tableCloth,

@@ -12016,7 +12016,7 @@ basicCell.prototype.animateToHeight = function(tableCloth,
       clearInterval(int);
     }
 
-  },1);
+  },16);
 }
 
 basicCell.prototype.animateToOpacity = function(tableCloth,
@@ -12097,7 +12097,7 @@ var d3 = require('d3-browserify');
 
 var queryResultViewerBodyCell = function(options) {
   // configure the basic options for the cell
-  this.constructor(options);
+  basicCell.call(this,options);
 
   // configure custom options for queryResultViewerBodyCell
   this.options = cellOptions.configure(options);
@@ -12108,7 +12108,6 @@ var queryResultViewerBodyCell = function(options) {
 
 // inherit from the basicCell
 queryResultViewerBodyCell.prototype = Object.create(basicCell.prototype);
-queryResultViewerBodyCell.prototype.constructor = basicCell;
 
 
 queryResultViewerBodyCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
@@ -12258,7 +12257,7 @@ queryResultViewerBodyCell.prototype.animateToScale = function(tableCloth,
       clearInterval(int);
     }
 
-  },1);
+  },16);
 
   return this;
 }

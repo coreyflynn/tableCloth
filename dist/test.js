@@ -28,6 +28,5 @@ function addAFew(index) {
   }
   cellsToAdd.forEach(function(cell) {
     tc.cellManager.addCellAtIndex(cell,index,600);
-    // cell.animateToHeight(tc,24,600);
   });
 }
