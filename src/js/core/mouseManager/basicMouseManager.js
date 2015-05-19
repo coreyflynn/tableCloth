@@ -16,8 +16,11 @@ var basicMouseManager = function(tableCloth) {
       y: ev.clientY - rect.top
     };
 
+    // see if we are hovering over a cell
     var hoveredCell = tableCloth.cellManager.findCellAtPosition(position.x,position.y);
-    tableCloth.cellManager.hoveredCellIndex = hoveredCell.options.index;
+    if (hoveredCell) {
+      tableCloth.cellManager.hoveredCellIndex = hoveredCell.options.index;
+    }
     tableCloth.cellManager.renderCells();
   });
 
