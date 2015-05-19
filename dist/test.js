@@ -8,7 +8,7 @@ var start = new Date().getTime();
 var int = setInterval(function(){
   for (i=0; i < 100; i++) {
     var color = colors[Math.floor(Math.random()*colors.length)];
-    tc.cellManager.addCell(new tc.cellFactory.queryResultViewerBodyCell({bgColor: color, label: 'cell' + i}));
+    tc.cellManager.addCell(new tc.cellFactory.queryResultViewerSummaryCell({bgColor: color, label: 'cell' + i}));
   }
 
   count += 1;

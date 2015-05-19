@@ -32,7 +32,6 @@ var tableCloth = function(target,options) {
   coreViewport.attach(this);
 
   // attach a cell manager
-  console.log(coreCellManager);
   this.cellManager = new coreCellManager[this.options.cellManager](this);
 
   // attach a scroll manager
@@ -67,7 +66,7 @@ if (window) {
   window.tableCloth = tableCloth
 }
 
-},{"./core/cell":7,"./core/cellManager":11,"./core/mouseManager":14,"./core/options":15,"./core/scrollManager":24,"./core/viewport":26}],2:[function(require,module,exports){
+},{"./core/cell":7,"./core/cellManager":13,"./core/mouseManager":16,"./core/options":17,"./core/scrollManager":26,"./core/viewport":28}],2:[function(require,module,exports){
 module.exports = function() {
   var d3 = {
     version: "3.4.11"
@@ -12049,7 +12048,7 @@ basicCell.prototype.animateToOpacity = function(tableCloth,
 
 module.exports = basicCell;
 
-},{"../../render/index":19,"../../util":25,"./options":6,"ease-component":3}],6:[function(require,module,exports){
+},{"../../render/index":21,"../../util":27,"./options":6,"ease-component":3}],6:[function(require,module,exports){
 /****************************************
  * cell option processing utilities   *
  **************************************/
@@ -12077,13 +12076,15 @@ module.exports = {
 },{}],7:[function(require,module,exports){
 var basicCell = require('./basicCell');
 var queryResultViewerBodyCell = require('./queryResultViewerBodyCell');
+var queryResultViewerSummaryCell = require('./queryResultViewerSummaryCell');
 
 module.exports = {
   basicCell: basicCell,
-  queryResultViewerBodyCell: queryResultViewerBodyCell
+  queryResultViewerBodyCell: queryResultViewerBodyCell,
+  queryResultViewerSummaryCell: queryResultViewerSummaryCell
 }
 
-},{"./basicCell":5,"./queryResultViewerBodyCell":8}],8:[function(require,module,exports){
+},{"./basicCell":5,"./queryResultViewerBodyCell":8,"./queryResultViewerSummaryCell":10}],8:[function(require,module,exports){
 /************************************************************************
  * Body cell customized for use with Broad Institute's Connectivity Map *
  * Query Result Viewer                                                  *
@@ -12206,7 +12207,7 @@ queryResultViewerBodyCell.prototype.setScale = function(domain, range) {
 
 module.exports = queryResultViewerBodyCell;
 
-},{"../../render/index":19,"../../util":25,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
+},{"../../render/index":21,"../../util":27,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
 /*********************************************************
  * queryResultViewerBodyCell option processing utilities *
  *********************************************************/
@@ -12225,6 +12226,70 @@ module.exports = {
 }
 
 },{}],10:[function(require,module,exports){
+/************************************************************************
+ * Body cell customized for use with Broad Institute's Connectivity Map *
+ * Query Result Viewer                                                  *
+ ************************************************************************/
+var queryResultViewerBodyCell = require('../queryResultViewerBodyCell');
+var cellOptions = require('./options');
+
+var queryResultViewerSummaryCell = function(options) {
+  // configure the basic options for the cell
+  this.foo(options);
+
+  // configure custom options for queryResultViewerBodyCell
+  this.options = cellOptions.configure(options);
+}
+
+// inherit from the queryResultViewerBodyCell
+queryResultViewerSummaryCell.prototype = Object.create(queryResultViewerBodyCell.prototype);
+queryResultViewerSummaryCell.prototype.foo = queryResultViewerBodyCell;
+
+/**
+ * render the cell
+ * @param  {tableCloth} tableCloth the tableCloth instance to draw against
+ * @param  {[type]} xOffset    the x position to use in rendering
+ * @param  {[type]} yOffset    the y position to use in rendering
+ * @param  {[type]} highlight  indicates if the cell should be drawn as a
+ *                               highlighted cell
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
+  this.constructor.prototype.render(tableCloth,xOffset,yOffset,highlight);
+}
+
+/**
+ * opens the summary cell's subCells
+ * @param  {int} duration the length of an opening animation in ms. Defaults to 0ms
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.open = function(duration) {
+
+  return this;
+}
+
+module.exports = queryResultViewerSummaryCell;
+
+},{"../queryResultViewerBodyCell":8,"./options":11}],11:[function(require,module,exports){
+/************************************************************
+ * queryResultViewerSummaryCell option processing utilities *
+ ************************************************************/
+
+function configure(options) {
+  options = (options === undefined) ? {} : options;
+  options.subCells = (options.subCells === undefined) ? [] : options.subCells;
+  options.score = (options.score === undefined) ? Math.random() * 200 - 100 : options.score;
+
+  return options;
+
+  return options;
+}
+
+module.exports = {
+  configure: configure
+}
+
+},{}],12:[function(require,module,exports){
 /********************************************************************
  * Minimal cell manager implementation. All logic related to moving *
  * cells around should go here                                      *
@@ -12515,7 +12580,7 @@ basicCellManager.prototype.sortByField = function(field, ascending) {
 
 module.exports = basicCellManager;
 
-},{"../util":25,"ease-component":3,"hammerjs":4}],11:[function(require,module,exports){
+},{"../util":27,"ease-component":3,"hammerjs":4}],13:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 var queryResultViewerCellManager = require('./queryResultViewerCellManager');
 
@@ -12524,7 +12589,7 @@ module.exports = {
   queryResultViewerCellManager: queryResultViewerCellManager
 }
 
-},{"./basicCellManager":10,"./queryResultViewerCellManager":12}],12:[function(require,module,exports){
+},{"./basicCellManager":12,"./queryResultViewerCellManager":14}],14:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 var ease = require('ease-component');
 
@@ -12663,7 +12728,7 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
 
 module.exports = queryResultViewerCellManager;
 
-},{"./basicCellManager":10,"ease-component":3}],13:[function(require,module,exports){
+},{"./basicCellManager":12,"ease-component":3}],15:[function(require,module,exports){
 /***********************
  * Basic Mouse Manager *
  ***********************/
@@ -12707,14 +12772,14 @@ var basicMouseManager = function(tableCloth) {
 
 module.exports = basicMouseManager;
 
-},{"../util":25}],14:[function(require,module,exports){
+},{"../util":27}],16:[function(require,module,exports){
 basicMouseManager = require('./basicMouseManager');
 
 module.exports = {
   basicMouseManager: basicMouseManager
 }
 
-},{"./basicMouseManager":13}],15:[function(require,module,exports){
+},{"./basicMouseManager":15}],17:[function(require,module,exports){
 /*******************************
  * option processing utilities *
  *******************************/
@@ -12734,7 +12799,7 @@ module.exports = {
   configure: configure
 }
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict'
 var background = require('./render/background');
 
@@ -12742,7 +12807,7 @@ module.exports = {
   background: background.main
 }
 
-},{"./render/background":17}],17:[function(require,module,exports){
+},{"./render/background":19}],19:[function(require,module,exports){
 'use strict'
 /*******************************
  * Background render utilities *
@@ -12779,7 +12844,7 @@ module.exports = {
   main: main
 }
 
-},{"../util":25}],18:[function(require,module,exports){
+},{"../util":27}],20:[function(require,module,exports){
 var util = require('../util');
 
 function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
@@ -12804,7 +12869,7 @@ function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
 
 module.exports = dashedLine;
 
-},{"../util":25}],19:[function(require,module,exports){
+},{"../util":27}],21:[function(require,module,exports){
 /***********************
  * Rendering utilities *
  ***********************/
@@ -12817,7 +12882,7 @@ render.dashedLine = require('./dashedLine');
 
 module.exports = render;
 
-},{"./background":17,"./dashedLine":18,"./rect":20,"./roundRect":21,"./text":22}],20:[function(require,module,exports){
+},{"./background":19,"./dashedLine":20,"./rect":22,"./roundRect":23,"./text":24}],22:[function(require,module,exports){
 /********************************
  * Utility to render rectangles *
  ********************************/
@@ -12849,7 +12914,7 @@ function rect(ctx,x,y,width, height, fillStyle, globalAlpha) {
 
 module.exports = rect;
 
-},{"../util":25}],21:[function(require,module,exports){
+},{"../util":27}],23:[function(require,module,exports){
 /**
  * Draws a rounded rectangle using the current state of the canvas.
  * If you omit the last three params, it will draw a rectangle
@@ -12891,7 +12956,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 
 module.exports = roundRect;
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var util = require('../util');
 
 function text(ctx,string,x,y,fillStyle,font) {
@@ -12908,7 +12973,7 @@ function text(ctx,string,x,y,fillStyle,font) {
 
 module.exports = text
 
-},{"../util":25}],23:[function(require,module,exports){
+},{"../util":27}],25:[function(require,module,exports){
 /**************************
  * Basic Scroll Manager   *
  **************************/
@@ -12981,14 +13046,14 @@ basicScrollManager.prototype.scrollToPosition = function(y, duration, easeName) 
 
 module.exports = basicScrollManager;
 
-},{"ease-component":3,"hammerjs":4}],24:[function(require,module,exports){
+},{"ease-component":3,"hammerjs":4}],26:[function(require,module,exports){
 var basicScrollManager = require('./basicScrollManager');
 
 module.exports = {
   basicScrollManager: basicScrollManager
 }
 
-},{"./basicScrollManager":23}],25:[function(require,module,exports){
+},{"./basicScrollManager":25}],27:[function(require,module,exports){
 /**
  * grab the current browser's pixel ratio
  * http://www.html5rocks.com/en/tutorials/canvas/hidpi/
@@ -13009,7 +13074,7 @@ module.exports = {
   getPixelRatio: getPixelRatio
 }
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 /**********************
  * Viewport functions *
@@ -13093,6 +13158,6 @@ module.exports = {
   animateToHeight: animateToHeight
 }
 
-},{"./render":16,"./util":25,"ease-component":3}]},{},[1]);
+},{"./render":18,"./util":27,"ease-component":3}]},{},[1]);
 
 //# sourceMappingURL=bundle.js.map
