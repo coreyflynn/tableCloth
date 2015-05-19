@@ -12204,65 +12204,6 @@ queryResultViewerBodyCell.prototype.setScale = function(domain, range) {
   return this;
 }
 
-/**
- * Animate the scale to the input domain and range. The length of the domain
- * and range arrays must match that of the
- * @param {tableCloth} The tableCloth instance to use when rendering
- * @param {array} domain an array that describes the input domain of the scale
- * @param {array} range  an array that describs the output range of the scale
- * @return {queryResultViewerBodyCell}
- */
-queryResultViewerBodyCell.prototype.animateToScale = function(tableCloth,
-                                          domain, range, easeName) {
-  var self = this;
-  var start = new Date().getTime();
-  var tmpDomain, tmpRange;
-
-  // calculate the domain delta
-  var startingDomain = this.scale.domain;
-  deltaDomain = [];
-  startingDomain.forEach(function(d,i){
-    deltaDomain.push(domain[i] - d);
-  });
-
-  // calculate the range delta
-  var startingRange = this.scale.range;
-  deltaRange = [];
-  startingRange.forEach(function(d,i){
-    deltaRange.push(range[i] - d);
-  });
-
-  // set the easing function to use
-  var easing = (easeName === undefined) ? ease.inOutExpo : ease[easeName];
-
-  // set up and setInterval to render the animation until it is complete
-  var timer = 0;
-  var int = setInterval(function() {
-    window.requestAnimationFrame(function() {
-      var now = new Date().getTime();
-      var timeDiff =  now - start;
-      var proportion = timeDiff / duration;
-
-      // grab the eased domain and range
-      for (var i = 0; i < domain.length; i++) {
-        tmpDomain = tmpRange = [];
-        tmpDomain[i].push(startingDomain[i] + easing(proportion) * delta);
-        tmpRange[i].push(startingRange[i] + easing(proportion) * delta);
-      }
-
-      tableCloth.cellManager.positionCells();
-      tableCloth.cellManager.renderCells();
-    });
-
-    if (timeDiff >= duration) {
-      clearInterval(int);
-    }
-
-  },1);
-
-  return this;
-}
-
 module.exports = queryResultViewerBodyCell;
 
 },{"../../render/index":19,"../../util":25,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
@@ -12589,6 +12530,7 @@ var ease = require('ease-component');
 
 var queryResultViewerCellManager = function(tableCloth){
   this.constructor(tableCloth);
+  this.tailZoom = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
@@ -12618,8 +12560,33 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
  */
 queryResultViewerCellManager.prototype.setScale = function(domain,range) {
   this.cells.forEach(function(cell) {
-    cell.setScale(domain,range);
+    if (cell.setScale) {
+      cell.setScale(domain,range);
+    }
   });
+  return this;
+}
+
+/**
+ * toggles the tails to be zoomed in our out to default values
+ * @return {queryResultViewerCellManager}
+ */
+ queryResultViewerCellManager.prototype.toggleTails = function() {
+  var start = 200;
+  var end = this.tableCloth.options.width - 102;
+  var unit = (this.tableCloth.options.width - 302) / 200;
+  var domain = [-100, -90, 90, 100];
+  var range;
+
+  if (this.tailZoom) {
+    range = [start, unit * 10 + 200, unit * 190 + 200, end];
+  } else {
+    range = [start, unit * 90 + 200, unit * 110 + 200, end];
+  }
+
+  this.animateToScale(domain, range, 600);
+  this.tailZoom = (this.tailZoom) ? false: true;
+
   return this;
 }
 
@@ -12677,7 +12644,9 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
 
       // set the scale for all of the cells and render them;
       cellsToAnimate.forEach(function(cell){
-        cell.setScale(tmpDomain,tmpRange);
+        if (cell.setScale) {
+          cell.setScale(tmpDomain,tmpRange);
+        }
       })
       self.renderCells();
 

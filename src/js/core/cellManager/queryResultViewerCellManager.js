@@ -3,6 +3,7 @@ var ease = require('ease-component');
 
 var queryResultViewerCellManager = function(tableCloth){
   this.constructor(tableCloth);
+  this.tailZoom = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
@@ -32,8 +33,33 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
  */
 queryResultViewerCellManager.prototype.setScale = function(domain,range) {
   this.cells.forEach(function(cell) {
-    cell.setScale(domain,range);
+    if (cell.setScale) {
+      cell.setScale(domain,range);
+    }
   });
+  return this;
+}
+
+/**
+ * toggles the tails to be zoomed in our out to default values
+ * @return {queryResultViewerCellManager}
+ */
+ queryResultViewerCellManager.prototype.toggleTails = function() {
+  var start = 200;
+  var end = this.tableCloth.options.width - 102;
+  var unit = (this.tableCloth.options.width - 302) / 200;
+  var domain = [-100, -90, 90, 100];
+  var range;
+
+  if (this.tailZoom) {
+    range = [start, unit * 10 + 200, unit * 190 + 200, end];
+  } else {
+    range = [start, unit * 90 + 200, unit * 110 + 200, end];
+  }
+
+  this.animateToScale(domain, range, 600);
+  this.tailZoom = (this.tailZoom) ? false: true;
+
   return this;
 }
 
@@ -91,7 +117,9 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
 
       // set the scale for all of the cells and render them;
       cellsToAnimate.forEach(function(cell){
-        cell.setScale(tmpDomain,tmpRange);
+        if (cell.setScale) {
+          cell.setScale(tmpDomain,tmpRange);
+        }
       })
       self.renderCells();
 
