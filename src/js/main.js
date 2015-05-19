@@ -31,7 +31,6 @@ var tableCloth = function(target,options) {
   coreViewport.attach(this);
 
   // attach a cell manager
-  console.log(coreCellManager);
   this.cellManager = new coreCellManager[this.options.cellManager](this);
 
   // attach a scroll manager

@@ -32,7 +32,6 @@ var tableCloth = function(target,options) {
   coreViewport.attach(this);
 
   // attach a cell manager
-  console.log(coreCellManager);
   this.cellManager = new coreCellManager[this.options.cellManager](this);
 
   // attach a scroll manager
@@ -67,7 +66,7 @@ if (window) {
   window.tableCloth = tableCloth
 }
 
-},{"./core/cell":7,"./core/cellManager":11,"./core/mouseManager":14,"./core/options":15,"./core/scrollManager":24,"./core/viewport":26}],2:[function(require,module,exports){
+},{"./core/cell":7,"./core/cellManager":13,"./core/mouseManager":16,"./core/options":17,"./core/scrollManager":26,"./core/viewport":28}],2:[function(require,module,exports){
 module.exports = function() {
   var d3 = {
     version: "3.4.11"
@@ -1178,7 +1177,7 @@ module.exports = function() {
         d3_mouse_bug44083 = !(ctm.f || ctm.e);
         svg.remove();
       }
-      if (d3_mouse_bug44083) point.x = e.pageX, point.y = e.pageY; else point.x = e.clientX, 
+      if (d3_mouse_bug44083) point.x = e.pageX, point.y = e.pageY; else point.x = e.clientX,
       point.y = e.clientY;
       point = point.matrixTransform(container.getScreenCTM().inverse());
       return [ point.x, point.y ];
@@ -1519,7 +1518,7 @@ module.exports = function() {
     }
     function mousewheeled() {
       var dispatch = event.of(this, arguments);
-      if (mousewheelTimer) clearTimeout(mousewheelTimer); else translate0 = location(center0 = center || d3.mouse(this)), 
+      if (mousewheelTimer) clearTimeout(mousewheelTimer); else translate0 = location(center0 = center || d3.mouse(this)),
       d3_selection_interrupt.call(this), zoomstarted(dispatch);
       mousewheelTimer = setTimeout(function() {
         mousewheelTimer = null;
@@ -1899,7 +1898,7 @@ module.exports = function() {
   d3.xhr = d3_xhrType(d3_identity);
   function d3_xhrType(response) {
     return function(url, mimeType, callback) {
-      if (arguments.length === 2 && typeof mimeType === "function") callback = mimeType, 
+      if (arguments.length === 2 && typeof mimeType === "function") callback = mimeType,
       mimeType = null;
       return d3_xhr(url, mimeType, response, callback);
     };
@@ -2731,7 +2730,7 @@ module.exports = function() {
     return n ? (date.y = d3_time_expandYear(+n[0]), i + n[0].length) : -1;
   }
   function d3_time_parseZone(date, string, i) {
-    return /^[+-]\d{4}$/.test(string = string.substring(i, i + 5)) ? (date.Z = -string, 
+    return /^[+-]\d{4}$/.test(string = string.substring(i, i + 5)) ? (date.Z = -string,
     i + 5) : -1;
   }
   function d3_time_expandYear(d) {
@@ -2924,7 +2923,7 @@ module.exports = function() {
     var λ00, φ00, λ0, cosφ0, sinφ0;
     d3_geo_area.point = function(λ, φ) {
       d3_geo_area.point = nextPoint;
-      λ0 = (λ00 = λ) * d3_radians, cosφ0 = Math.cos(φ = (φ00 = φ) * d3_radians / 2 + π / 4), 
+      λ0 = (λ00 = λ) * d3_radians, cosφ0 = Math.cos(φ = (φ00 = φ) * d3_radians / 2 + π / 4),
       sinφ0 = Math.sin(φ);
     };
     function nextPoint(λ, φ) {
@@ -4753,7 +4752,7 @@ module.exports = function() {
       return _ ? center([ -_[1], _[0] ]) : (_ = center(), [ _[1], -_[0] ]);
     };
     projection.rotate = function(_) {
-      return _ ? rotate([ _[0], _[1], _.length > 2 ? _[2] + 90 : 90 ]) : (_ = rotate(), 
+      return _ ? rotate([ _[0], _[1], _.length > 2 ? _[2] + 90 : 90 ]) : (_ = rotate(),
       [ _[0], _[1], _[2] - 90 ]);
     };
     return rotate([ 0, 0, 90 ]);
@@ -5604,7 +5603,7 @@ module.exports = function() {
     };
     quadtree.extent = function(_) {
       if (!arguments.length) return x1 == null ? null : [ [ x1, y1 ], [ x2, y2 ] ];
-      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0], 
+      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0],
       y2 = +_[1][1];
       return quadtree;
     };
@@ -7270,7 +7269,7 @@ module.exports = function() {
         return d3_layout_treemapPad(node, x);
       }
       var type;
-      pad = (padding = x) == null ? d3_layout_treemapPadNull : (type = typeof x) === "function" ? padFunction : type === "number" ? (x = [ x, x, x, x ], 
+      pad = (padding = x) == null ? d3_layout_treemapPadNull : (type = typeof x) === "function" ? padFunction : type === "number" ? (x = [ x, x, x, x ],
       padConstant) : padConstant;
       return treemap;
     };
@@ -7570,7 +7569,7 @@ module.exports = function() {
     scale.tickFormat = function(n, format) {
       if (!arguments.length) return d3_scale_logFormat;
       if (arguments.length < 2) format = d3_scale_logFormat; else if (typeof format !== "function") format = d3.format(format);
-      var k = Math.max(.1, n / scale.ticks().length), f = positive ? (e = 1e-12, Math.ceil) : (e = -1e-12, 
+      var k = Math.max(.1, n / scale.ticks().length), f = positive ? (e = 1e-12, Math.ceil) : (e = -1e-12,
       Math.floor), e;
       return function(d) {
         return d / pow(f(log(d) + e)) <= k ? format(d) : "";
@@ -7856,7 +7855,7 @@ module.exports = function() {
   d3.svg.arc = function() {
     var innerRadius = d3_svg_arcInnerRadius, outerRadius = d3_svg_arcOuterRadius, startAngle = d3_svg_arcStartAngle, endAngle = d3_svg_arcEndAngle;
     function arc() {
-      var r0 = innerRadius.apply(this, arguments), r1 = outerRadius.apply(this, arguments), a0 = startAngle.apply(this, arguments) + d3_svg_arcOffset, a1 = endAngle.apply(this, arguments) + d3_svg_arcOffset, da = (a1 < a0 && (da = a0, 
+      var r0 = innerRadius.apply(this, arguments), r1 = outerRadius.apply(this, arguments), a0 = startAngle.apply(this, arguments) + d3_svg_arcOffset, a1 = endAngle.apply(this, arguments) + d3_svg_arcOffset, da = (a1 < a0 && (da = a0,
       a0 = a1, a1 = da), a1 - a0), df = da < π ? "0" : "1", c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
       return da >= d3_svg_arcMax ? r0 ? "M0," + r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + -r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + r1 + "M0," + r0 + "A" + r0 + "," + r0 + " 0 1,0 0," + -r0 + "A" + r0 + "," + r0 + " 0 1,0 0," + r0 + "Z" : "M0," + r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + -r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + r1 + "Z" : r0 ? "M" + r1 * c0 + "," + r1 * s0 + "A" + r1 + "," + r1 + " 0 " + df + ",1 " + r1 * c1 + "," + r1 * s1 + "L" + r0 * c1 + "," + r0 * s1 + "A" + r0 + "," + r0 + " 0 " + df + ",0 " + r0 * c0 + "," + r0 * s0 + "Z" : "M" + r1 * c0 + "," + r1 * s0 + "A" + r1 + "," + r1 + " 0 " + df + ",1 " + r1 * c1 + "," + r1 * s1 + "L0,0" + "Z";
     }
@@ -7992,7 +7991,7 @@ module.exports = function() {
     return points.length < 4 ? d3_svg_lineLinear(points) : points[1] + d3_svg_lineHermite(points.slice(1, points.length - 1), d3_svg_lineCardinalTangents(points, tension));
   }
   function d3_svg_lineCardinalClosed(points, tension) {
-    return points.length < 3 ? d3_svg_lineLinear(points) : points[0] + d3_svg_lineHermite((points.push(points[0]), 
+    return points.length < 3 ? d3_svg_lineLinear(points) : points[0] + d3_svg_lineHermite((points.push(points[0]),
     points), d3_svg_lineCardinalTangents([ points[points.length - 2] ].concat(points, [ points[1] ]), tension));
   }
   function d3_svg_lineCardinal(points, tension) {
@@ -8698,7 +8697,7 @@ module.exports = function() {
         var g = d3.select(this);
         var scale0 = this.__chart__ || scale, scale1 = this.__chart__ = scale.copy();
         var ticks = tickValues == null ? scale1.ticks ? scale1.ticks.apply(scale1, tickArguments_) : scale1.domain() : tickValues, tickFormat = tickFormat_ == null ? scale1.tickFormat ? scale1.tickFormat.apply(scale1, tickArguments_) : d3_identity : tickFormat_, tick = g.selectAll(".tick").data(ticks, scale1), tickEnter = tick.enter().insert("g", ".domain").attr("class", "tick").style("opacity", ε), tickExit = d3.transition(tick.exit()).style("opacity", ε).remove(), tickUpdate = d3.transition(tick.order()).style("opacity", 1), tickTransform;
-        var range = d3_scaleRange(scale1), path = g.selectAll(".domain").data([ 0 ]), pathUpdate = (path.enter().append("path").attr("class", "domain"), 
+        var range = d3_scaleRange(scale1), path = g.selectAll(".domain").data([ 0 ]), pathUpdate = (path.enter().append("path").attr("class", "domain"),
         d3.transition(path));
         tickEnter.append("line");
         tickEnter.append("text");
@@ -12049,7 +12048,7 @@ basicCell.prototype.animateToOpacity = function(tableCloth,
 
 module.exports = basicCell;
 
-},{"../../render/index":19,"../../util":25,"./options":6,"ease-component":3}],6:[function(require,module,exports){
+},{"../../render/index":21,"../../util":27,"./options":6,"ease-component":3}],6:[function(require,module,exports){
 /****************************************
  * cell option processing utilities   *
  **************************************/
@@ -12077,13 +12076,15 @@ module.exports = {
 },{}],7:[function(require,module,exports){
 var basicCell = require('./basicCell');
 var queryResultViewerBodyCell = require('./queryResultViewerBodyCell');
+var queryResultViewerSummaryCell = require('./queryResultViewerSummaryCell');
 
 module.exports = {
   basicCell: basicCell,
-  queryResultViewerBodyCell: queryResultViewerBodyCell
+  queryResultViewerBodyCell: queryResultViewerBodyCell,
+  queryResultViewerSummaryCell: queryResultViewerSummaryCell
 }
 
-},{"./basicCell":5,"./queryResultViewerBodyCell":8}],8:[function(require,module,exports){
+},{"./basicCell":5,"./queryResultViewerBodyCell":8,"./queryResultViewerSummaryCell":10}],8:[function(require,module,exports){
 /************************************************************************
  * Body cell customized for use with Broad Institute's Connectivity Map *
  * Query Result Viewer                                                  *
@@ -12264,7 +12265,7 @@ queryResultViewerBodyCell.prototype.animateToScale = function(tableCloth,
 
 module.exports = queryResultViewerBodyCell;
 
-},{"../../render/index":19,"../../util":25,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
+},{"../../render/index":21,"../../util":27,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
 /*********************************************************
  * queryResultViewerBodyCell option processing utilities *
  *********************************************************/
@@ -12283,6 +12284,70 @@ module.exports = {
 }
 
 },{}],10:[function(require,module,exports){
+/************************************************************************
+ * Body cell customized for use with Broad Institute's Connectivity Map *
+ * Query Result Viewer                                                  *
+ ************************************************************************/
+var queryResultViewerBodyCell = require('../queryResultViewerBodyCell');
+var cellOptions = require('./options');
+
+var queryResultViewerSummaryCell = function(options) {
+  // configure the basic options for the cell
+  this.foo(options);
+
+  // configure custom options for queryResultViewerBodyCell
+  this.options = cellOptions.configure(options);
+}
+
+// inherit from the queryResultViewerBodyCell
+queryResultViewerSummaryCell.prototype = Object.create(queryResultViewerBodyCell.prototype);
+queryResultViewerSummaryCell.prototype.foo = queryResultViewerBodyCell;
+
+/**
+ * render the cell
+ * @param  {tableCloth} tableCloth the tableCloth instance to draw against
+ * @param  {[type]} xOffset    the x position to use in rendering
+ * @param  {[type]} yOffset    the y position to use in rendering
+ * @param  {[type]} highlight  indicates if the cell should be drawn as a
+ *                               highlighted cell
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
+  this.constructor.prototype.render(tableCloth,xOffset,yOffset,highlight);
+}
+
+/**
+ * opens the summary cell's subCells
+ * @param  {int} duration the length of an opening animation in ms. Defaults to 0ms
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.open = function(duration) {
+
+  return this;
+}
+
+module.exports = queryResultViewerSummaryCell;
+
+},{"../queryResultViewerBodyCell":8,"./options":11}],11:[function(require,module,exports){
+/************************************************************
+ * queryResultViewerSummaryCell option processing utilities *
+ ************************************************************/
+
+function configure(options) {
+  options = (options === undefined) ? {} : options;
+  options.subCells = (options.subCells === undefined) ? [] : options.subCells;
+  options.score = (options.score === undefined) ? Math.random() * 200 - 100 : options.score;
+
+  return options;
+
+  return options;
+}
+
+module.exports = {
+  configure: configure
+}
+
+},{}],12:[function(require,module,exports){
 /********************************************************************
  * Minimal cell manager implementation. All logic related to moving *
  * cells around should go here                                      *
@@ -12573,7 +12638,7 @@ basicCellManager.prototype.sortByField = function(field, ascending) {
 
 module.exports = basicCellManager;
 
-},{"../util":25,"ease-component":3,"hammerjs":4}],11:[function(require,module,exports){
+},{"../util":27,"ease-component":3,"hammerjs":4}],13:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 var queryResultViewerCellManager = require('./queryResultViewerCellManager');
 
@@ -12582,12 +12647,13 @@ module.exports = {
   queryResultViewerCellManager: queryResultViewerCellManager
 }
 
-},{"./basicCellManager":10,"./queryResultViewerCellManager":12}],12:[function(require,module,exports){
+},{"./basicCellManager":12,"./queryResultViewerCellManager":14}],14:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 var ease = require('ease-component');
 
 var queryResultViewerCellManager = function(tableCloth){
   this.constructor(tableCloth);
+  this.tailZoom = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
@@ -12617,8 +12683,33 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
  */
 queryResultViewerCellManager.prototype.setScale = function(domain,range) {
   this.cells.forEach(function(cell) {
-    cell.setScale(domain,range);
+    if (cell.setScale) {
+      cell.setScale(domain,range);
+    }
   });
+  return this;
+}
+
+/**
+ * toggles the tails to be zoomed in our out to default values
+ * @return {queryResultViewerCellManager}
+ */
+ queryResultViewerCellManager.prototype.toggleTails = function() {
+  var start = 200;
+  var end = this.tableCloth.options.width - 102;
+  var unit = (this.tableCloth.options.width - 302) / 200;
+  var domain = [-100, -90, 90, 100];
+  var range;
+
+  if (this.tailZoom) {
+    range = [start, unit * 10 + 200, unit * 190 + 200, end];
+  } else {
+    range = [start, unit * 90 + 200, unit * 110 + 200, end];
+  }
+
+  this.animateToScale(domain, range, 600);
+  this.tailZoom = (this.tailZoom) ? false: true;
+
   return this;
 }
 
@@ -12676,7 +12767,9 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
 
       // set the scale for all of the cells and render them;
       cellsToAnimate.forEach(function(cell){
-        cell.setScale(tmpDomain,tmpRange);
+        if (cell.setScale) {
+          cell.setScale(tmpDomain,tmpRange);
+        }
       })
       self.renderCells();
 
@@ -12693,7 +12786,7 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
 
 module.exports = queryResultViewerCellManager;
 
-},{"./basicCellManager":10,"ease-component":3}],13:[function(require,module,exports){
+},{"./basicCellManager":12,"ease-component":3}],15:[function(require,module,exports){
 /***********************
  * Basic Mouse Manager *
  ***********************/
@@ -12712,8 +12805,11 @@ var basicMouseManager = function(tableCloth) {
       y: ev.clientY - rect.top
     };
 
+    // see if we are hovering over a cell
     var hoveredCell = tableCloth.cellManager.findCellAtPosition(position.x,position.y);
-    tableCloth.cellManager.hoveredCellIndex = hoveredCell.options.index;
+    if (hoveredCell) {
+      tableCloth.cellManager.hoveredCellIndex = hoveredCell.options.index;
+    }
     tableCloth.cellManager.renderCells();
   });
 
@@ -12734,14 +12830,14 @@ var basicMouseManager = function(tableCloth) {
 
 module.exports = basicMouseManager;
 
-},{"../util":25}],14:[function(require,module,exports){
+},{"../util":27}],16:[function(require,module,exports){
 basicMouseManager = require('./basicMouseManager');
 
 module.exports = {
   basicMouseManager: basicMouseManager
 }
 
-},{"./basicMouseManager":13}],15:[function(require,module,exports){
+},{"./basicMouseManager":15}],17:[function(require,module,exports){
 /*******************************
  * option processing utilities *
  *******************************/
@@ -12761,7 +12857,7 @@ module.exports = {
   configure: configure
 }
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict'
 var background = require('./render/background');
 
@@ -12769,7 +12865,7 @@ module.exports = {
   background: background.main
 }
 
-},{"./render/background":17}],17:[function(require,module,exports){
+},{"./render/background":19}],19:[function(require,module,exports){
 'use strict'
 /*******************************
  * Background render utilities *
@@ -12806,7 +12902,7 @@ module.exports = {
   main: main
 }
 
-},{"../util":25}],18:[function(require,module,exports){
+},{"../util":27}],20:[function(require,module,exports){
 var util = require('../util');
 
 function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
@@ -12831,7 +12927,7 @@ function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
 
 module.exports = dashedLine;
 
-},{"../util":25}],19:[function(require,module,exports){
+},{"../util":27}],21:[function(require,module,exports){
 /***********************
  * Rendering utilities *
  ***********************/
@@ -12844,7 +12940,7 @@ render.dashedLine = require('./dashedLine');
 
 module.exports = render;
 
-},{"./background":17,"./dashedLine":18,"./rect":20,"./roundRect":21,"./text":22}],20:[function(require,module,exports){
+},{"./background":19,"./dashedLine":20,"./rect":22,"./roundRect":23,"./text":24}],22:[function(require,module,exports){
 /********************************
  * Utility to render rectangles *
  ********************************/
@@ -12876,7 +12972,7 @@ function rect(ctx,x,y,width, height, fillStyle, globalAlpha) {
 
 module.exports = rect;
 
-},{"../util":25}],21:[function(require,module,exports){
+},{"../util":27}],23:[function(require,module,exports){
 /**
  * Draws a rounded rectangle using the current state of the canvas.
  * If you omit the last three params, it will draw a rectangle
@@ -12918,7 +13014,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 
 module.exports = roundRect;
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var util = require('../util');
 
 function text(ctx,string,x,y,fillStyle,font) {
@@ -12935,7 +13031,7 @@ function text(ctx,string,x,y,fillStyle,font) {
 
 module.exports = text
 
-},{"../util":25}],23:[function(require,module,exports){
+},{"../util":27}],25:[function(require,module,exports){
 /**************************
  * Basic Scroll Manager   *
  **************************/
@@ -13008,14 +13104,14 @@ basicScrollManager.prototype.scrollToPosition = function(y, duration, easeName) 
 
 module.exports = basicScrollManager;
 
-},{"ease-component":3,"hammerjs":4}],24:[function(require,module,exports){
+},{"ease-component":3,"hammerjs":4}],26:[function(require,module,exports){
 var basicScrollManager = require('./basicScrollManager');
 
 module.exports = {
   basicScrollManager: basicScrollManager
 }
 
-},{"./basicScrollManager":23}],25:[function(require,module,exports){
+},{"./basicScrollManager":25}],27:[function(require,module,exports){
 /**
  * grab the current browser's pixel ratio
  * http://www.html5rocks.com/en/tutorials/canvas/hidpi/
@@ -13036,7 +13132,7 @@ module.exports = {
   getPixelRatio: getPixelRatio
 }
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 /**********************
  * Viewport functions *
@@ -13120,6 +13216,6 @@ module.exports = {
   animateToHeight: animateToHeight
 }
 
-},{"./render":16,"./util":25,"ease-component":3}]},{},[1]);
+},{"./render":18,"./util":27,"ease-component":3}]},{},[1]);
 
 //# sourceMappingURL=bundle.js.map
