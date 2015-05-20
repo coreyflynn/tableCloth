@@ -22,6 +22,7 @@ var queryResultViewerBodyCell = function(options) {
 
 // inherit from the basicCell
 queryResultViewerBodyCell.prototype = Object.create(basicCell.prototype);
+queryResultViewerBodyCell.constructor = basicCell;
 
 
 queryResultViewerBodyCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {

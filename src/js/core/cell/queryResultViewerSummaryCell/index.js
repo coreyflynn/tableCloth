@@ -7,7 +7,7 @@ var cellOptions = require('./options');
 
 var queryResultViewerSummaryCell = function(options) {
   // configure the basic options for the cell
-  this.foo(options);
+  queryResultViewerBodyCell.call(this,options);
 
   // configure custom options for queryResultViewerBodyCell
   this.options = cellOptions.configure(options);
@@ -15,7 +15,6 @@ var queryResultViewerSummaryCell = function(options) {
 
 // inherit from the queryResultViewerBodyCell
 queryResultViewerSummaryCell.prototype = Object.create(queryResultViewerBodyCell.prototype);
-queryResultViewerSummaryCell.prototype.foo = queryResultViewerBodyCell;
 
 /**
  * render the cell
@@ -27,7 +26,7 @@ queryResultViewerSummaryCell.prototype.foo = queryResultViewerBodyCell;
  * @return {queryResultViewerSummaryCell}
  */
 queryResultViewerSummaryCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
-  this.constructor.prototype.render(tableCloth,xOffset,yOffset,highlight);
+  queryResultViewerBodyCell.prototype.render.call(this,tableCloth,xOffset,yOffset,highlight);
 }
 
 /**
