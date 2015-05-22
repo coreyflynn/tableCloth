@@ -12,19 +12,19 @@ var int = setInterval(function(){
   }
 
   count += 1;
-  if (count >= 1) {
+  if (count >= 10) {
     clearInterval(int);
     console.info('done adding cells');
     var end = new Date().getTime();
     console.info('time elapsed: ' + (end - start) + 'ms');
   }
-},100);
+},10);
 
 function addAFew(index) {
   var cellsToAdd = [];
   for (var i = 0; i < 5; i++) {
     var color = colors[Math.floor(Math.random()*colors.length)];
-    cellsToAdd.push(new tc.cellFactory.basicCell({bgColor: color}));
+    cellsToAdd.push(new tc.cellFactory.queryResultViewerBodyCell({}));
   }
   cellsToAdd.forEach(function(cell) {
     tc.cellManager.addCellAtIndex(cell,index,600);

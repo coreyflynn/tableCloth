@@ -66,7 +66,7 @@ if (window) {
   window.tableCloth = tableCloth
 }
 
-},{"./core/cell":7,"./core/cellManager":13,"./core/mouseManager":16,"./core/options":17,"./core/scrollManager":26,"./core/viewport":28}],2:[function(require,module,exports){
+},{"./core/cell":7,"./core/cellManager":13,"./core/mouseManager":16,"./core/options":17,"./core/scrollManager":25,"./core/viewport":27}],2:[function(require,module,exports){
 module.exports = function() {
   var d3 = {
     version: "3.4.11"
@@ -12048,7 +12048,7 @@ basicCell.prototype.animateToOpacity = function(tableCloth,
 
 module.exports = basicCell;
 
-},{"../../render/index":21,"../../util":27,"./options":6,"ease-component":3}],6:[function(require,module,exports){
+},{"../../render/index":21,"../../util":26,"./options":6,"ease-component":3}],6:[function(require,module,exports){
 /****************************************
  * cell option processing utilities   *
  **************************************/
@@ -12266,7 +12266,7 @@ queryResultViewerBodyCell.prototype.animateToScale = function(tableCloth,
 
 module.exports = queryResultViewerBodyCell;
 
-},{"../../render/index":21,"../../util":27,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
+},{"../../render/index":21,"../../util":26,"../basicCell":5,"./options":9,"d3-browserify":2,"ease-component":3}],9:[function(require,module,exports){
 /*********************************************************
  * queryResultViewerBodyCell option processing utilities *
  *********************************************************/
@@ -12290,6 +12290,7 @@ module.exports = {
  * Query Result Viewer                                                  *
  ************************************************************************/
 var queryResultViewerBodyCell = require('../queryResultViewerBodyCell');
+var render = require('../../render/index');
 var cellOptions = require('./options');
 
 var queryResultViewerSummaryCell = function(options) {
@@ -12313,7 +12314,73 @@ queryResultViewerSummaryCell.prototype = Object.create(queryResultViewerBodyCell
  * @return {queryResultViewerSummaryCell}
  */
 queryResultViewerSummaryCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
-  queryResultViewerBodyCell.prototype.render.call(this,tableCloth,xOffset,yOffset,highlight);
+
+  // render the background of the cell
+  render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
+              this.options.y - yOffset,this.options.width,this.options.height,'#DDDDDD');
+
+  // render the label
+  render.text(tableCloth.viewport.ctx,this.options.label,
+              this.options.x + xOffset + 40,
+              this.options.y - yOffset + 19);
+
+  // render the color indicator for the row
+  render.rect(tableCloth.viewport.ctx,
+              this.options.x + xOffset + 13,
+              this.options.y - yOffset,
+              24,this.options.height,this.options.cellColor);
+
+  // render the type text for the row
+  render.text(tableCloth.viewport.ctx,this.options.type,
+              this.options.x + xOffset + 16,
+              this.options.y - yOffset + 19,
+              'white');
+
+  // render the score text for the row
+  render.text(tableCloth.viewport.ctx, this.options.score.toFixed(2),
+              this.options.width - 60,
+              this.options.y - yOffset + 19);
+
+  // render the score indicator for the row
+  render.rect(tableCloth.viewport.ctx,
+              this.scale(this.options.score) + xOffset,
+              this.options.y - yOffset,
+              2, this.options.height, this.options.cellColor);
+
+  // render an overlay to emphasize the |90 - 100| scores
+  render.rect(tableCloth.viewport.ctx,
+              this.scale(-90) + xOffset,
+              this.options.y - yOffset,
+              this.scale(90) - this.scale(-90),
+              this.options.height, '#DDDDDD', 0.8);
+
+  // render the tail display for the window
+  this.renderTailBoundaries(tableCloth, xOffset, yOffset);
+
+  if (highlight) {
+    this.renderHighlight(tableCloth,xOffset,yOffset,highlight);
+  }
+
+  // render the top border of the cell
+  render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
+              this.options.y - yOffset,this.options.width,1,'white');
+
+  return this;
+
+}
+
+/**
+ * render the highlight of the row
+ * @param  {tableCloth} tableCloth the tableCloth instance to draw against
+ * @param  {[type]} xOffset    the x position to use in rendering
+ * @param  {[type]} yOffset    the y position to use in rendering
+ * @param {[type]} highlight  [description]
+ */
+queryResultViewerBodyCell.prototype.renderHighlight = function(tableCloth,xOffset,yOffset){
+  render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
+              this.options.y - yOffset,5,this.options.height,'black');
+
+  return this;
 }
 
 /**
@@ -12328,17 +12395,16 @@ queryResultViewerSummaryCell.open = function(duration) {
 
 module.exports = queryResultViewerSummaryCell;
 
-},{"../queryResultViewerBodyCell":8,"./options":11}],11:[function(require,module,exports){
+},{"../../render/index":21,"../queryResultViewerBodyCell":8,"./options":11}],11:[function(require,module,exports){
 /************************************************************
  * queryResultViewerSummaryCell option processing utilities *
  ************************************************************/
 
 function configure(options) {
   options = (options === undefined) ? {} : options;
+  options.type = (options.type === undefined) ? 'CP' : options.type;
   options.subCells = (options.subCells === undefined) ? [] : options.subCells;
   options.score = (options.score === undefined) ? Math.random() * 200 - 100 : options.score;
-
-  return options;
 
   return options;
 }
@@ -12638,7 +12704,7 @@ basicCellManager.prototype.sortByField = function(field, ascending) {
 
 module.exports = basicCellManager;
 
-},{"../util":27,"ease-component":3,"hammerjs":4}],13:[function(require,module,exports){
+},{"../util":26,"ease-component":3,"hammerjs":4}],13:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 var queryResultViewerCellManager = require('./queryResultViewerCellManager');
 
@@ -12830,7 +12896,7 @@ var basicMouseManager = function(tableCloth) {
 
 module.exports = basicMouseManager;
 
-},{"../util":27}],16:[function(require,module,exports){
+},{"../util":26}],16:[function(require,module,exports){
 basicMouseManager = require('./basicMouseManager');
 
 module.exports = {
@@ -12902,7 +12968,7 @@ module.exports = {
   main: main
 }
 
-},{"../util":27}],20:[function(require,module,exports){
+},{"../util":26}],20:[function(require,module,exports){
 var util = require('../util');
 
 function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
@@ -12927,20 +12993,19 @@ function dashedLine(ctx,x,y,strokeStyle,dash,globalAlpha) {
 
 module.exports = dashedLine;
 
-},{"../util":27}],21:[function(require,module,exports){
+},{"../util":26}],21:[function(require,module,exports){
 /***********************
  * Rendering utilities *
  ***********************/
 var render = {}
 render.background = require('./background');
 render.rect = require('./rect');
-render.roundRect = require('./roundRect');
 render.text = require('./text');
 render.dashedLine = require('./dashedLine');
 
 module.exports = render;
 
-},{"./background":19,"./dashedLine":20,"./rect":22,"./roundRect":23,"./text":24}],22:[function(require,module,exports){
+},{"./background":19,"./dashedLine":20,"./rect":22,"./text":23}],22:[function(require,module,exports){
 /********************************
  * Utility to render rectangles *
  ********************************/
@@ -12972,49 +13037,7 @@ function rect(ctx,x,y,width, height, fillStyle, globalAlpha) {
 
 module.exports = rect;
 
-},{"../util":27}],23:[function(require,module,exports){
-/**
- * Draws a rounded rectangle using the current state of the canvas.
- * If you omit the last three params, it will draw a rectangle
- * outline with a 5 pixel border radius
- * @param {CanvasRenderingContext2D} ctx
- * @param {Number} x The top left x coordinate
- * @param {Number} y The top left y coordinate
- * @param {Number} width The width of the rectangle
- * @param {Number} height The height of the rectangle
- * @param {Number} radius The corner radius. Defaults to 5;
- * @param {Boolean} fill Whether to fill the rectangle. Defaults to false.
- * @param {Boolean} stroke Whether to stroke the rectangle. Defaults to true.
- */
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-  if (typeof stroke == "undefined" ) {
-    stroke = true;
-  }
-  if (typeof radius === "undefined") {
-    radius = 5;
-  }
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-  if (stroke) {
-    ctx.stroke();
-  }
-  if (fill) {
-    ctx.fill();
-  }
-}
-
-module.exports = roundRect;
-
-},{}],24:[function(require,module,exports){
+},{"../util":26}],23:[function(require,module,exports){
 var util = require('../util');
 
 function text(ctx,string,x,y,fillStyle,font) {
@@ -13031,7 +13054,7 @@ function text(ctx,string,x,y,fillStyle,font) {
 
 module.exports = text
 
-},{"../util":27}],25:[function(require,module,exports){
+},{"../util":26}],24:[function(require,module,exports){
 /**************************
  * Basic Scroll Manager   *
  **************************/
@@ -13104,14 +13127,14 @@ basicScrollManager.prototype.scrollToPosition = function(y, duration, easeName) 
 
 module.exports = basicScrollManager;
 
-},{"ease-component":3,"hammerjs":4}],26:[function(require,module,exports){
+},{"ease-component":3,"hammerjs":4}],25:[function(require,module,exports){
 var basicScrollManager = require('./basicScrollManager');
 
 module.exports = {
   basicScrollManager: basicScrollManager
 }
 
-},{"./basicScrollManager":25}],27:[function(require,module,exports){
+},{"./basicScrollManager":24}],26:[function(require,module,exports){
 /**
  * grab the current browser's pixel ratio
  * http://www.html5rocks.com/en/tutorials/canvas/hidpi/
@@ -13132,7 +13155,7 @@ module.exports = {
   getPixelRatio: getPixelRatio
 }
 
-},{}],28:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 /**********************
  * Viewport functions *
@@ -13216,6 +13239,6 @@ module.exports = {
   animateToHeight: animateToHeight
 }
 
-},{"./render":18,"./util":27,"ease-component":3}]},{},[1]);
+},{"./render":18,"./util":26,"ease-component":3}]},{},[1]);
 
 //# sourceMappingURL=bundle.js.map
