@@ -1,18 +1,18 @@
 tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
 
-tc.cellFactory.queryResultViewerBodyCell.prototype.click = function(){addAFew(this.options.index + 1)}
+// tc.cellFactory.queryResultViewerBodyCell.prototype.click = function(){addAFew(this.options.index + 1)}
 
-var colors = ['red','green','blue','orange','yellow'];
 var count = 0;
 var start = new Date().getTime();
 var int = setInterval(function(){
   for (i=0; i < 100; i++) {
-    var color = colors[Math.floor(Math.random()*colors.length)];
-    tc.cellManager.addCell(new tc.cellFactory.queryResultViewerSummaryCell({bgColor: color, label: 'cell' + i}));
+    var cell = new tc.cellFactory.queryResultViewerSummaryCell({label: 'cell' + i});
+    cell = addSubCells(cell);
+    tc.cellManager.addCell(cell);
   }
 
   count += 1;
-  if (count >= 10) {
+  if (count >= 1) {
     clearInterval(int);
     console.info('done adding cells');
     var end = new Date().getTime();
@@ -20,13 +20,11 @@ var int = setInterval(function(){
   }
 },10);
 
-function addAFew(index) {
+function addSubCells(cell) {
   var cellsToAdd = [];
-  for (var i = 0; i < 5; i++) {
-    var color = colors[Math.floor(Math.random()*colors.length)];
+  for (var i = 0; i < Math.ceil(Math.random()*10); i++) {
     cellsToAdd.push(new tc.cellFactory.queryResultViewerBodyCell({}));
   }
-  cellsToAdd.forEach(function(cell) {
-    tc.cellManager.addCellAtIndex(cell,index,600);
-  });
+  cell.options.subCells = cellsToAdd;
+  return cell;
 }

@@ -101,7 +101,43 @@ queryResultViewerBodyCell.prototype.renderHighlight = function(tableCloth,xOffse
  * @param  {int} duration the length of an opening animation in ms. Defaults to 0ms
  * @return {queryResultViewerSummaryCell}
  */
-queryResultViewerSummaryCell.open = function(duration) {
+queryResultViewerSummaryCell.prototype.open = function(duration) {
+  // make sure the cells have a height that is the same size as their summary cell
+  this.options.subCells.map(function(cell) {
+    cell.options.height = this.options.height;
+  }.bind(this));
+
+  var cells = this.options.subCells;
+
+  this.options.cellManager.addCellsAtIndex(cells,
+                                            this.options.index + 1,
+                                            duration).setScale();
+
+  return this;
+}
+
+/**
+ * closes the summary cell's subCells
+ * @param  {int} duration the length of an closing animation in ms. Defaults to 0ms
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.prototype.close = function(duration) {
+  this.options.cellManager.removeCellsAtIndexRange(this.options.index + 1,
+        this.options.index + this.options.subCells.length + 1, duration);
+  return this;
+}
+
+/**
+ * custom click handler to open or close the subCells
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.prototype.click = function() {
+  if (this.options.state === 'closed') {
+    this.open(600);
+  } else {
+    this.close(600);
+  }
+  this.options.state = (this.options.state === 'open') ? 'closed' : 'open';
 
   return this;
 }

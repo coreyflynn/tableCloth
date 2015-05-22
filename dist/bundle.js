@@ -12065,6 +12065,7 @@ function configure(options) {
   options.opacity = (options.opacity === undefined) ? 1 : options.opacity;
   options.fillContainer = (options.fillContainer === undefined) ? true : options.fillContainer;
   options.label = (options.label === undefined) ? 'cell' : options.label;
+  options.cellManager = (options.cellManager === undefined) ? undefined : options.cellManager;
 
   return options;
 }
@@ -12388,7 +12389,43 @@ queryResultViewerBodyCell.prototype.renderHighlight = function(tableCloth,xOffse
  * @param  {int} duration the length of an opening animation in ms. Defaults to 0ms
  * @return {queryResultViewerSummaryCell}
  */
-queryResultViewerSummaryCell.open = function(duration) {
+queryResultViewerSummaryCell.prototype.open = function(duration) {
+  // make sure the cells have a height that is the same size as their summary cell
+  this.options.subCells.map(function(cell) {
+    cell.options.height = this.options.height;
+  }.bind(this));
+
+  var cells = this.options.subCells;
+
+  this.options.cellManager.addCellsAtIndex(cells,
+                                            this.options.index + 1,
+                                            duration).setScale();
+
+  return this;
+}
+
+/**
+ * closes the summary cell's subCells
+ * @param  {int} duration the length of an closing animation in ms. Defaults to 0ms
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.prototype.close = function(duration) {
+  this.options.cellManager.removeCellsAtIndexRange(this.options.index + 1,
+        this.options.index + this.options.subCells.length + 1, duration);
+  return this;
+}
+
+/**
+ * custom click handler to open or close the subCells
+ * @return {queryResultViewerSummaryCell}
+ */
+queryResultViewerSummaryCell.prototype.click = function() {
+  if (this.options.state === 'closed') {
+    this.open(600);
+  } else {
+    this.close(600);
+  }
+  this.options.state = (this.options.state === 'open') ? 'closed' : 'open';
 
   return this;
 }
@@ -12405,6 +12442,7 @@ function configure(options) {
   options.type = (options.type === undefined) ? 'CP' : options.type;
   options.subCells = (options.subCells === undefined) ? [] : options.subCells;
   options.score = (options.score === undefined) ? Math.random() * 200 - 100 : options.score;
+  options.state = (options.state === undefined) ? 'closed' : options.state;
 
   return options;
 }
@@ -12452,6 +12490,7 @@ basicCellManager.prototype.addCell = function(cell,duration) {
   }
   cell.options.y = this.cellsHeight;
   cell.options.index = this.cells.length;
+  cell.options.cellManager = this;
   this.cells.push(cell);
   this.cellsHeight += cell.options.height;
 
@@ -12497,6 +12536,9 @@ basicCellManager.prototype.addCellAtIndex = function(cell,index,duration) {
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
+
+  cell.options.cellManager = this;
+
   this.cells.splice(index,0,cell);
   this.cellsHeight += cell.options.height;
 
@@ -12507,6 +12549,20 @@ basicCellManager.prototype.addCellAtIndex = function(cell,index,duration) {
   } else {
     this.renderCells();
   }
+
+  return this;
+}
+
+/**
+ * add an array of cells to the cell manager at the index given
+ * @param {array} cells an array of cells to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                      adding the cell. Defaults to 0ms
+ */
+basicCellManager.prototype.addCellsAtIndex = function(cells, index, duration) {
+  cells.forEach(function(cell) {
+    this.addCellAtIndex(cell,index,duration);
+  }.bind(this));
 
   return this;
 }
@@ -12548,7 +12604,6 @@ basicCellManager.prototype.removeCellsAtIndexRange = function(start,end,
                                                               duration) {
   var cells = this.cells.slice(start,end);
   duration = (duration === undefined) ? 0 : duration;
-
 
   if (duration) {
     var targetHeight = 0;
@@ -12718,12 +12773,11 @@ var basicCellManager = require('./basicCellManager');
 var ease = require('ease-component');
 
 var queryResultViewerCellManager = function(tableCloth){
-  this.constructor(tableCloth);
+  basicCellManager.call(this,tableCloth);
   this.tailZoom = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
-queryResultViewerCellManager.prototype.constructor = basicCellManager;
 
 /**
  * add cell to the cell manager instance at the end of the cell array
@@ -12736,8 +12790,8 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
-  cell.setScale();
   this.constructor.prototype.addCell.call(this,cell,duration);
+  cell.setScale();
   return this;
 }
 

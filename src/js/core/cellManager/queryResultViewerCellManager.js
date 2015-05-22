@@ -2,12 +2,11 @@ var basicCellManager = require('./basicCellManager');
 var ease = require('ease-component');
 
 var queryResultViewerCellManager = function(tableCloth){
-  this.constructor(tableCloth);
+  basicCellManager.call(this,tableCloth);
   this.tailZoom = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
-queryResultViewerCellManager.prototype.constructor = basicCellManager;
 
 /**
  * add cell to the cell manager instance at the end of the cell array
@@ -20,8 +19,8 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
-  cell.setScale();
   this.constructor.prototype.addCell.call(this,cell,duration);
+  cell.setScale();
   return this;
 }
 

@@ -14,6 +14,7 @@ function configure(options) {
   options.opacity = (options.opacity === undefined) ? 1 : options.opacity;
   options.fillContainer = (options.fillContainer === undefined) ? true : options.fillContainer;
   options.label = (options.label === undefined) ? 'cell' : options.label;
+  options.cellManager = (options.cellManager === undefined) ? undefined : options.cellManager;
 
   return options;
 }

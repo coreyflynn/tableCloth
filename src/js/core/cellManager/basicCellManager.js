@@ -36,6 +36,7 @@ basicCellManager.prototype.addCell = function(cell,duration) {
   }
   cell.options.y = this.cellsHeight;
   cell.options.index = this.cells.length;
+  cell.options.cellManager = this;
   this.cells.push(cell);
   this.cellsHeight += cell.options.height;
 
@@ -81,6 +82,9 @@ basicCellManager.prototype.addCellAtIndex = function(cell,index,duration) {
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
+
+  cell.options.cellManager = this;
+
   this.cells.splice(index,0,cell);
   this.cellsHeight += cell.options.height;
 
@@ -91,6 +95,20 @@ basicCellManager.prototype.addCellAtIndex = function(cell,index,duration) {
   } else {
     this.renderCells();
   }
+
+  return this;
+}
+
+/**
+ * add an array of cells to the cell manager at the index given
+ * @param {array} cells an array of cells to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                      adding the cell. Defaults to 0ms
+ */
+basicCellManager.prototype.addCellsAtIndex = function(cells, index, duration) {
+  cells.forEach(function(cell) {
+    this.addCellAtIndex(cell,index,duration);
+  }.bind(this));
 
   return this;
 }
@@ -132,7 +150,6 @@ basicCellManager.prototype.removeCellsAtIndexRange = function(start,end,
                                                               duration) {
   var cells = this.cells.slice(start,end);
   duration = (duration === undefined) ? 0 : duration;
-
 
   if (duration) {
     var targetHeight = 0;
