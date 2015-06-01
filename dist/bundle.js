@@ -12399,7 +12399,10 @@ queryResultViewerSummaryCell.prototype.open = function(duration) {
 
   this.options.cellManager.addCellsAtIndex(cells,
                                             this.options.index + 1,
-                                            duration).setScale();
+                                            duration);
+  this.options.subCells.forEach(function(cell){
+    cell.setScale(this.scale.domain(),this.scale.range());
+  }.bind(this));
 
   return this;
 }
@@ -12504,6 +12507,43 @@ basicCellManager.prototype.addCell = function(cell,duration) {
 }
 
 /**
+ * add cells to the cell manager instance at the end of the cell array
+ * @param {array} cells the cells to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 0ms
+ * @return {tableCloth basicCellManager}
+ */
+basicCellManager.prototype.addCells = function(cells,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  cells.forEach(function(cell){
+
+    if (duration) {
+      var targetHeight = cell.options.height;
+      cell.options.height = 0;
+    }
+    if (cell.options.fillContainer) {
+      cell.options.width = this.tableCloth.$el.clientWidth;
+    }
+    cell.options.y = this.cellsHeight;
+    cell.options.index = this.cells.length;
+    cell.options.cellManager = this;
+    this.cells.push(cell);
+    this.cellsHeight += cell.options.height;
+
+    if (duration) {
+      cell.animateToHeight(this.tableCloth,targetHeight,duration);
+    }
+  }.bind(this));
+
+  if (duration === 0) {
+    this.renderCells();
+  }
+
+  return this
+}
+
+/**
  * reflow the cells in the basicCellManager instance
  */
 basicCellManager.prototype.reflowCells = function() {
@@ -12586,6 +12626,36 @@ basicCellManager.prototype.removeCellAtIndex = function(index,duration) {
 
   setTimeout(function(){
     this.cells.splice(index,1);
+    this.positionCells().reflowCells().renderCells();
+  }.bind(this),duration);
+
+  return this;
+}
+
+/**
+ * removes the cells specified by the passed array of indices
+ * @param {Array} indexArray the indices to be used
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       removing the cell. Defaults to 0ms.
+ * @return {basicCellManager}
+ */
+basicCellManager.prototype.removeCellsAtIndexArray = function(indexArray,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  if (duration) {
+    indexArray.forEach(function(index) {
+      var cell = this.cells[index];
+      var targetHeight = 0;
+      this.cells[index].animateToHeight(this.tableCloth,targetHeight,duration);
+    }.bind(this));
+  }
+
+  setTimeout(function(){
+    var spliceCount = 0;
+    indexArray.forEach(function(index){
+      this.cells.splice(index - spliceCount,1);
+      spliceCount += 1;
+    }.bind(this));
     this.positionCells().reflowCells().renderCells();
   }.bind(this),duration);
 
@@ -12795,6 +12865,13 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
   return this;
 }
 
+queryResultViewerCellManager.prototype.addCells = function(cells,duration) {
+  this.constructor.prototype.addCells.call(this,cells,duration);
+  cells.forEach(function(cell){
+    cell.setScale();
+  });
+}
+
 /**
  * sets the scale of all cells in the cellManager
  * @param {array} domain an array that describes the input domain of the scale
@@ -12834,12 +12911,67 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
 }
 
 /**
+ * collapses all of the top level cells in the cell manager
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                     removing the cell. Defaults to 0ms.
+ * @return {queryResultViewerCellManager}
+ */
+queryResultViewerCellManager.prototype.collapseAll = function(duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  // find all of the subCell indices and collect them. Marked any
+  // cells with subCells as closed
+  var indices = [];
+  var newCells = this.cells.map(function(cell){
+    if (cell.options.state === 'open') {
+      indices = indices.concat(
+        cell.options.subCells.map(function(cell){ return cell.options.index}));
+      cell.options.state = 'closed';
+    }
+    return cell;
+  });
+
+  this.cells = newCells;
+
+  // collapse all of the cells in one shot after making sure the indices are
+  // in ascending order
+  indices.sort(function(a,b){return a > b});
+
+  this.removeCellsAtIndexArray(indices,duration);
+
+  return this;
+}
+
+/**
+ * sorts the cells in the cell manager by their value of the given summary options field
+ * @param {string} field     the field to sort on
+ * @param {boolean} ascending set to true for an ascending sort. defaults to
+ *                              false
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                     removing the cell. Defaults to 0ms.
+ * @return {queryResultViewerCellManager}
+ */
+queryResultViewerCellManager.prototype.sortBySummaryField = function(field,ascending,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  // collapse all of the open rows
+  this.collapseAll(duration);
+
+  // now sort by the summary rows since they are the only thing left
+  setTimeout(function(){
+    this.sortByField(field,ascending);
+  }.bind(this),duration);
+
+  return this;
+}
+
+/**
  * Animate the scale to the input domain and range. The length of the domain
  * and range arrays must match that of the
  * @param {tableCloth} The tableCloth instance to use when rendering
  * @param {array} domain an array that describes the input domain of the scale
  * @param {array} range  an array that describs the output range of the scale
- * @return {queryResultViewerCellManagerl}
+ * @return {queryResultViewerCellManager}
  */
 queryResultViewerCellManager.prototype.animateToScale = function(domain,
                                                               range,

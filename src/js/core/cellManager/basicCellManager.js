@@ -50,6 +50,43 @@ basicCellManager.prototype.addCell = function(cell,duration) {
 }
 
 /**
+ * add cells to the cell manager instance at the end of the cell array
+ * @param {array} cells the cells to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 0ms
+ * @return {tableCloth basicCellManager}
+ */
+basicCellManager.prototype.addCells = function(cells,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  cells.forEach(function(cell){
+
+    if (duration) {
+      var targetHeight = cell.options.height;
+      cell.options.height = 0;
+    }
+    if (cell.options.fillContainer) {
+      cell.options.width = this.tableCloth.$el.clientWidth;
+    }
+    cell.options.y = this.cellsHeight;
+    cell.options.index = this.cells.length;
+    cell.options.cellManager = this;
+    this.cells.push(cell);
+    this.cellsHeight += cell.options.height;
+
+    if (duration) {
+      cell.animateToHeight(this.tableCloth,targetHeight,duration);
+    }
+  }.bind(this));
+
+  if (duration === 0) {
+    this.renderCells();
+  }
+
+  return this
+}
+
+/**
  * reflow the cells in the basicCellManager instance
  */
 basicCellManager.prototype.reflowCells = function() {
@@ -132,6 +169,36 @@ basicCellManager.prototype.removeCellAtIndex = function(index,duration) {
 
   setTimeout(function(){
     this.cells.splice(index,1);
+    this.positionCells().reflowCells().renderCells();
+  }.bind(this),duration);
+
+  return this;
+}
+
+/**
+ * removes the cells specified by the passed array of indices
+ * @param {Array} indexArray the indices to be used
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       removing the cell. Defaults to 0ms.
+ * @return {basicCellManager}
+ */
+basicCellManager.prototype.removeCellsAtIndexArray = function(indexArray,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  if (duration) {
+    indexArray.forEach(function(index) {
+      var cell = this.cells[index];
+      var targetHeight = 0;
+      this.cells[index].animateToHeight(this.tableCloth,targetHeight,duration);
+    }.bind(this));
+  }
+
+  setTimeout(function(){
+    var spliceCount = 0;
+    indexArray.forEach(function(index){
+      this.cells.splice(index - spliceCount,1);
+      spliceCount += 1;
+    }.bind(this));
     this.positionCells().reflowCells().renderCells();
   }.bind(this),duration);
 

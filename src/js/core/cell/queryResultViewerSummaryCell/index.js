@@ -111,7 +111,10 @@ queryResultViewerSummaryCell.prototype.open = function(duration) {
 
   this.options.cellManager.addCellsAtIndex(cells,
                                             this.options.index + 1,
-                                            duration).setScale();
+                                            duration);
+  this.options.subCells.forEach(function(cell){
+    cell.setScale(this.scale.domain(),this.scale.range());
+  }.bind(this));
 
   return this;
 }

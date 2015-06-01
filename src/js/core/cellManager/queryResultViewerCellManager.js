@@ -24,6 +24,13 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
   return this;
 }
 
+queryResultViewerCellManager.prototype.addCells = function(cells,duration) {
+  this.constructor.prototype.addCells.call(this,cells,duration);
+  cells.forEach(function(cell){
+    cell.setScale();
+  });
+}
+
 /**
  * sets the scale of all cells in the cellManager
  * @param {array} domain an array that describes the input domain of the scale
@@ -63,12 +70,67 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
 }
 
 /**
+ * collapses all of the top level cells in the cell manager
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                     removing the cell. Defaults to 0ms.
+ * @return {queryResultViewerCellManager}
+ */
+queryResultViewerCellManager.prototype.collapseAll = function(duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  // find all of the subCell indices and collect them. Marked any
+  // cells with subCells as closed
+  var indices = [];
+  var newCells = this.cells.map(function(cell){
+    if (cell.options.state === 'open') {
+      indices = indices.concat(
+        cell.options.subCells.map(function(cell){ return cell.options.index}));
+      cell.options.state = 'closed';
+    }
+    return cell;
+  });
+
+  this.cells = newCells;
+
+  // collapse all of the cells in one shot after making sure the indices are
+  // in ascending order
+  indices.sort(function(a,b){return a > b});
+
+  this.removeCellsAtIndexArray(indices,duration);
+
+  return this;
+}
+
+/**
+ * sorts the cells in the cell manager by their value of the given summary options field
+ * @param {string} field     the field to sort on
+ * @param {boolean} ascending set to true for an ascending sort. defaults to
+ *                              false
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                     removing the cell. Defaults to 0ms.
+ * @return {queryResultViewerCellManager}
+ */
+queryResultViewerCellManager.prototype.sortBySummaryField = function(field,ascending,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+
+  // collapse all of the open rows
+  this.collapseAll(duration);
+
+  // now sort by the summary rows since they are the only thing left
+  setTimeout(function(){
+    this.sortByField(field,ascending);
+  }.bind(this),duration);
+
+  return this;
+}
+
+/**
  * Animate the scale to the input domain and range. The length of the domain
  * and range arrays must match that of the
  * @param {tableCloth} The tableCloth instance to use when rendering
  * @param {array} domain an array that describes the input domain of the scale
  * @param {array} range  an array that describs the output range of the scale
- * @return {queryResultViewerCellManagerl}
+ * @return {queryResultViewerCellManager}
  */
 queryResultViewerCellManager.prototype.animateToScale = function(domain,
                                                               range,

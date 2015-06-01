@@ -4,21 +4,17 @@ tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
 
 var count = 0;
 var start = new Date().getTime();
-var int = setInterval(function(){
-  for (i=0; i < 100; i++) {
-    var cell = new tc.cellFactory.queryResultViewerSummaryCell({label: 'cell' + i});
-    cell = addSubCells(cell);
-    tc.cellManager.addCell(cell);
-  }
+var cells = [];
+for (i=0; i < 10000; i++) {
+  var cell = new tc.cellFactory.queryResultViewerSummaryCell({label: 'cell' + i});
+  cell = addSubCells(cell);
+  cells.push(cell);
+  // tc.cellManager.addCell(cell);
+}
 
-  count += 1;
-  if (count >= 1) {
-    clearInterval(int);
-    console.info('done adding cells');
-    var end = new Date().getTime();
-    console.info('time elapsed: ' + (end - start) + 'ms');
-  }
-},10);
+tc.cellManager.addCells(cells);
+var end = new Date().getTime();
+console.info('time elapsed: ' + (end - start) + 'ms');
 
 function addSubCells(cell) {
   var cellsToAdd = [];
