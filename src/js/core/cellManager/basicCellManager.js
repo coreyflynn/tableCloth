@@ -15,6 +15,8 @@ var basicCellManager = function(tableCloth) {
   this.cells = [];
   this.cellsHeight = 0;
   this.scrollPosition = 0;
+  this.headerCells = [];
+  this.headerHeight = 0;
   this.hoveredCellIndex = null;
 }
 
@@ -47,6 +49,40 @@ basicCellManager.prototype.addCell = function(cell,duration) {
   }
 
   return this
+}
+
+/**
+ * adds a header cell to the cell manager. Header cells will stick
+ * to the top of the viewport regardless of scroll position
+ * @param {tableCloth cell} cell the cell to add
+ * @param {int} duration the duration in milliseconds for an animation when
+ *                       adding the cell. Defaults to 0ms
+ * @return {tableCloth basicCellManager}
+ */
+basicCellManager.prototype.addHeaderCell = function(cell,duration) {
+  duration = (duration === undefined) ? 0 : duration;
+  if (duration) {
+    this.addCellAtIndex(cell,0,duration);
+  }
+
+  if (cell.options.fillContainer) {
+    cell.options.width = this.tableCloth.$el.clientWidth;
+  }
+
+  setTimeout(function(){
+    if (duration) {
+      this.removeCellAtIndex(0);
+    }
+    cell.options.y = 0;
+    cell.options.cellManager = this;
+    this.headerCells.push(cell);
+    this.headerHeight = cell.options.height;
+    this.renderCells();
+  }.bind(this),duration);
+
+  this.renderCells();
+
+  return this;
 }
 
 /**
@@ -264,7 +300,7 @@ basicCellManager.prototype.findApproximateViewportCells = function() {
  *
  */
 basicCellManager.prototype.findCellAtPosition = function(x,y) {
-  var scrollPos = this.scrollPosition;
+  var scrollPos = this.scrollPosition - this.headerHeight;
   var cellsToCheck = this.findApproximateViewportCells();
   var foundCell = null;
   for (var i = 0; i < cellsToCheck.length; i++) {
@@ -336,11 +372,16 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
         if (cell.options.index === self.hoveredCellIndex){
           highlight = true;
         }
-        cell.render(self.tableCloth,0,self.scrollPosition,highlight);
+        cell.render(self.tableCloth,0,
+          self.scrollPosition - self.headerHeight,highlight);
     }
 
     // stop inspecting cells once we are below the viewport
     return cell.options.y > self.scrollPosition + self.tableCloth.options.height;
+  });
+
+  this.headerCells.forEach(function(cell){
+    cell.render(self.tableCloth,0,0);
   });
 
   this.tableCloth.viewport.ctx.setTransform(1 / pixelRatio,0,0, 1 / pixelRatio,0,0);

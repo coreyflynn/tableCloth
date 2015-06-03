@@ -1,18 +1,18 @@
 tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
 
-// tc.cellFactory.queryResultViewerBodyCell.prototype.click = function(){addAFew(this.options.index + 1)}
-
 var count = 0;
 var start = new Date().getTime();
 var cells = [];
-for (i=0; i < 10000; i++) {
+for (i=0; i < 1000; i++) {
   var cell = new tc.cellFactory.queryResultViewerSummaryCell({label: 'cell' + i});
   cell = addSubCells(cell);
   cells.push(cell);
   // tc.cellManager.addCell(cell);
 }
 
+tc.cellManager.addHeaderCell(new tc.cellFactory.queryResultViewerHeaderCell());
 tc.cellManager.addCells(cells);
+
 var end = new Date().getTime();
 console.info('time elapsed: ' + (end - start) + 'ms');
 

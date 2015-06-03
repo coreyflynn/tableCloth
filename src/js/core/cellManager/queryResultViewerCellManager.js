@@ -29,6 +29,7 @@ queryResultViewerCellManager.prototype.addCells = function(cells,duration) {
   cells.forEach(function(cell){
     cell.setScale();
   });
+  this.renderCells();
 }
 
 /**
