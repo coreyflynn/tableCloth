@@ -1,4 +1,5 @@
-tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
+"use strict";
+var tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
 
 var count = 0;
 var start = new Date().getTime();
