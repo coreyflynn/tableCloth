@@ -52,6 +52,7 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
  * @return {queryResultViewerCellManager}
  */
  queryResultViewerCellManager.prototype.toggleTails = function() {
+  this.lastChange = new Date().getTime();
   var start = 200;
   var end = this.tableCloth.options.width - 102;
   var unit = (this.tableCloth.options.width - 302) / 200;
@@ -65,7 +66,7 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
   }
 
   this.animateToScale(domain, range, 600);
-  this.tailZoom = (this.tailZoom) ? false: true;
+  this.tailZoom = !this.tailZoom;
 
   return this;
 }
@@ -183,6 +184,7 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
           cell.setScale(tmpDomain,tmpRange);
         }
       })
+
       self.renderCells();
 
       if (timeDiff >= duration) {

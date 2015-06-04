@@ -13846,6 +13846,8 @@ var queryResultViewerSummaryCell = require('../queryResultViewerSummaryCell');
 var cellOptions = require('./options');
 var render = require('../../render/index');
 var util = require('../../util');
+var _ = require('underscore');
+var d3 = require('d3-browserify');
 
 /**
  * constructor function for the queryResultViewerHeaderCell
@@ -13857,9 +13859,6 @@ var queryResultViewerHeaderCell = function(options){
 
   // call basicCell's constructor to finish initilization of the cell
   queryResultViewerBodyCell.call(this,this.options);
-
-  // set the initial scale
-  this.setScale();
 
   return this;
 }
@@ -13875,7 +13874,11 @@ queryResultViewerHeaderCell.prototype = Object.create(queryResultViewerBodyCell.
  * @return {queryResultViewerBodyCell}
  */
 queryResultViewerHeaderCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
-this.setScale();
+  // steal the scale from the one of the cells in the viewport
+  var templateCell = this.options.cellManager.findApproximateViewportCells()[0];
+  this.setScale(templateCell.scale.domain(),
+                templateCell.scale.range());
+
   // render the background of the cell in two portions, the top half for labels
   // and the bottom half for the header plot
   render.rect(tableCloth.viewport.ctx,
@@ -13901,17 +13904,29 @@ this.setScale();
               this.options.y - yOffset + this.options.height / 2 + 17);
 
   // render the score text for the row
-  this.getSummaryScores();
+  if (new Date().getTime() - this.options.cellManager.lastChange < 1000) {
+    this.getSummaryScores();
+  }
   render.text(tableCloth.viewport.ctx, this.options.summaryPct.toFixed(2),
               this.options.width - 60,
               this.options.y - yOffset + this.options.height / 2 + 17);
 
-  // render the score indicator for the row
+  // render the score indicators for all the rows in that viewport
+  var binnedScores = _.groupBy(this.options.summaryScores,function(score){
+    return Math.floor(this.scale(score) / 10);
+  }.bind(this));
 
-  render.rect(tableCloth.viewport.ctx,
-              this.scale(this.options.score) + xOffset,
-              this.options.y - yOffset,
-              2, this.options.height, this.options.cellColor);
+  var maxBin = _.max(_.values(binnedScores)
+                      .map(function(a){return a.length}));
+  for (bin in binnedScores){
+    render.rect(tableCloth.viewport.ctx,
+                bin * 10,
+                this.options.y - yOffset + this.options.height / 2,
+                10,
+                this.options.height / 2, 'black',
+                binnedScores[bin].length / this.options.summaryScores.length * 200);
+  };
+
 
   // render an overlay to emphasize the |90 - 100| scores
   render.rect(tableCloth.viewport.ctx,
@@ -13921,7 +13936,8 @@ this.setScale();
               this.options.height / 2, '#DDDDDD', 0.8);
 
   // render the tail display for the window
-  this.renderTailBoundaries(tableCloth, xOffset, yOffset);
+  this.renderTailBoundaries(tableCloth, xOffset,
+                            yOffset - this.options.height / 2);
 
   // render the top border of the cell
   render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
@@ -13959,7 +13975,7 @@ queryResultViewerHeaderCell.prototype.getSummaryScores = function() {
 
 module.exports = queryResultViewerHeaderCell;
 
-},{"../../render/index":24,"../../util":29,"../queryResultViewerBodyCell":9,"../queryResultViewerSummaryCell":13,"./options":12}],12:[function(require,module,exports){
+},{"../../render/index":24,"../../util":29,"../queryResultViewerBodyCell":9,"../queryResultViewerSummaryCell":13,"./options":12,"d3-browserify":2,"underscore":5}],12:[function(require,module,exports){
 /***********************************************************
  * queryResultViewerHeaderCell option processing utilities *
  ***********************************************************/
@@ -14167,6 +14183,7 @@ var basicCellManager = function(tableCloth) {
   this.headerCells = [];
   this.headerHeight = 0;
   this.hoveredCellIndex = null;
+  this.lastChange = new Date().getTime();
 }
 
 /**
@@ -14177,6 +14194,7 @@ var basicCellManager = function(tableCloth) {
  * @return {tableCloth basicCellManager}
  */
 basicCellManager.prototype.addCell = function(cell,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
   if (duration) {
     var targetHeight = cell.options.height;
@@ -14209,6 +14227,7 @@ basicCellManager.prototype.addCell = function(cell,duration) {
  * @return {tableCloth basicCellManager}
  */
 basicCellManager.prototype.addHeaderCell = function(cell,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
   if (duration) {
     this.addCellAtIndex(cell,0,duration);
@@ -14242,6 +14261,7 @@ basicCellManager.prototype.addHeaderCell = function(cell,duration) {
  * @return {tableCloth basicCellManager}
  */
 basicCellManager.prototype.addCells = function(cells,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   cells.forEach(function(cell){
@@ -14295,6 +14315,7 @@ basicCellManager.prototype.reflowCells = function() {
  * @return {basicCellManager}
  */
 basicCellManager.prototype.addCellAtIndex = function(cell,index,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   if (duration) {
@@ -14343,6 +14364,7 @@ basicCellManager.prototype.addCellsAtIndex = function(cells, index, duration) {
  * @return {basicCellManager}
  */
 basicCellManager.prototype.removeCellAtIndex = function(index,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   if (duration) {
@@ -14368,6 +14390,7 @@ basicCellManager.prototype.removeCellAtIndex = function(index,duration) {
  * @return {basicCellManager}
  */
 basicCellManager.prototype.removeCellsAtIndexArray = function(indexArray,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   if (duration) {
@@ -14400,6 +14423,7 @@ basicCellManager.prototype.removeCellsAtIndexArray = function(indexArray,duratio
  */
 basicCellManager.prototype.removeCellsAtIndexRange = function(start,end,
                                                               duration) {
+  this.lastChange = new Date().getTime();
   var cells = this.cells.slice(start,end);
   duration = (duration === undefined) ? 0 : duration;
 
@@ -14626,6 +14650,7 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
  * @return {queryResultViewerCellManager}
  */
  queryResultViewerCellManager.prototype.toggleTails = function() {
+  this.lastChange = new Date().getTime();
   var start = 200;
   var end = this.tableCloth.options.width - 102;
   var unit = (this.tableCloth.options.width - 302) / 200;
@@ -14639,7 +14664,7 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
   }
 
   this.animateToScale(domain, range, 600);
-  this.tailZoom = (this.tailZoom) ? false: true;
+  this.tailZoom = !this.tailZoom;
 
   return this;
 }
@@ -14757,6 +14782,7 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
           cell.setScale(tmpDomain,tmpRange);
         }
       })
+
       self.renderCells();
 
       if (timeDiff >= duration) {

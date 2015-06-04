@@ -18,6 +18,7 @@ var basicCellManager = function(tableCloth) {
   this.headerCells = [];
   this.headerHeight = 0;
   this.hoveredCellIndex = null;
+  this.lastChange = new Date().getTime();
 }
 
 /**
@@ -28,6 +29,7 @@ var basicCellManager = function(tableCloth) {
  * @return {tableCloth basicCellManager}
  */
 basicCellManager.prototype.addCell = function(cell,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
   if (duration) {
     var targetHeight = cell.options.height;
@@ -60,6 +62,7 @@ basicCellManager.prototype.addCell = function(cell,duration) {
  * @return {tableCloth basicCellManager}
  */
 basicCellManager.prototype.addHeaderCell = function(cell,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
   if (duration) {
     this.addCellAtIndex(cell,0,duration);
@@ -93,6 +96,7 @@ basicCellManager.prototype.addHeaderCell = function(cell,duration) {
  * @return {tableCloth basicCellManager}
  */
 basicCellManager.prototype.addCells = function(cells,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   cells.forEach(function(cell){
@@ -146,6 +150,7 @@ basicCellManager.prototype.reflowCells = function() {
  * @return {basicCellManager}
  */
 basicCellManager.prototype.addCellAtIndex = function(cell,index,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   if (duration) {
@@ -194,6 +199,7 @@ basicCellManager.prototype.addCellsAtIndex = function(cells, index, duration) {
  * @return {basicCellManager}
  */
 basicCellManager.prototype.removeCellAtIndex = function(index,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   if (duration) {
@@ -219,6 +225,7 @@ basicCellManager.prototype.removeCellAtIndex = function(index,duration) {
  * @return {basicCellManager}
  */
 basicCellManager.prototype.removeCellsAtIndexArray = function(indexArray,duration) {
+  this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
 
   if (duration) {
@@ -251,6 +258,7 @@ basicCellManager.prototype.removeCellsAtIndexArray = function(indexArray,duratio
  */
 basicCellManager.prototype.removeCellsAtIndexRange = function(start,end,
                                                               duration) {
+  this.lastChange = new Date().getTime();
   var cells = this.cells.slice(start,end);
   duration = (duration === undefined) ? 0 : duration;
 

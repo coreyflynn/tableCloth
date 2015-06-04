@@ -6,6 +6,8 @@ var queryResultViewerSummaryCell = require('../queryResultViewerSummaryCell');
 var cellOptions = require('./options');
 var render = require('../../render/index');
 var util = require('../../util');
+var _ = require('underscore');
+var d3 = require('d3-browserify');
 
 /**
  * constructor function for the queryResultViewerHeaderCell
@@ -17,9 +19,6 @@ var queryResultViewerHeaderCell = function(options){
 
   // call basicCell's constructor to finish initilization of the cell
   queryResultViewerBodyCell.call(this,this.options);
-
-  // set the initial scale
-  this.setScale();
 
   return this;
 }
@@ -35,7 +34,11 @@ queryResultViewerHeaderCell.prototype = Object.create(queryResultViewerBodyCell.
  * @return {queryResultViewerBodyCell}
  */
 queryResultViewerHeaderCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
-this.setScale();
+  // steal the scale from the one of the cells in the viewport
+  var templateCell = this.options.cellManager.findApproximateViewportCells()[0];
+  this.setScale(templateCell.scale.domain(),
+                templateCell.scale.range());
+
   // render the background of the cell in two portions, the top half for labels
   // and the bottom half for the header plot
   render.rect(tableCloth.viewport.ctx,
@@ -61,17 +64,29 @@ this.setScale();
               this.options.y - yOffset + this.options.height / 2 + 17);
 
   // render the score text for the row
-  this.getSummaryScores();
+  if (new Date().getTime() - this.options.cellManager.lastChange < 1000) {
+    this.getSummaryScores();
+  }
   render.text(tableCloth.viewport.ctx, this.options.summaryPct.toFixed(2),
               this.options.width - 60,
               this.options.y - yOffset + this.options.height / 2 + 17);
 
-  // render the score indicator for the row
+  // render the score indicators for all the rows in that viewport
+  var binnedScores = _.groupBy(this.options.summaryScores,function(score){
+    return Math.floor(this.scale(score) / 10);
+  }.bind(this));
 
-  render.rect(tableCloth.viewport.ctx,
-              this.scale(this.options.score) + xOffset,
-              this.options.y - yOffset,
-              2, this.options.height, this.options.cellColor);
+  var maxBin = _.max(_.values(binnedScores)
+                      .map(function(a){return a.length}));
+  for (bin in binnedScores){
+    render.rect(tableCloth.viewport.ctx,
+                bin * 10,
+                this.options.y - yOffset + this.options.height / 2,
+                10,
+                this.options.height / 2, 'black',
+                binnedScores[bin].length / this.options.summaryScores.length * 200);
+  };
+
 
   // render an overlay to emphasize the |90 - 100| scores
   render.rect(tableCloth.viewport.ctx,
@@ -81,7 +96,8 @@ this.setScale();
               this.options.height / 2, '#DDDDDD', 0.8);
 
   // render the tail display for the window
-  this.renderTailBoundaries(tableCloth, xOffset, yOffset);
+  this.renderTailBoundaries(tableCloth, xOffset,
+                            yOffset - this.options.height / 2);
 
   // render the top border of the cell
   render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
