@@ -14074,16 +14074,20 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
 
   // render subCell connection indicators that fall in the tails
   var numPosSig = 0;
+  var posXOffset = 0;
   var numNegSig = 0;
   this.options.subCells.forEach(function (cell) {
     if (cell.options.score >= 90) {
       render.rect(tableCloth.viewport.ctx,
-                  this.scale(100) + xOffset + numPosSig * 2,
-                  this.options.y - yOffset,
-                  2, this.options.height,
+                  this.scale(100) + xOffset + posXOffset,
+                  this.options.y - yOffset + numPosSig % 5,
+                  4, 4,
                   cell.options.cellColor,
                   0.5);
       numPosSig = numPosSig + 1;
+      if (numPosSig % 5 === 0) {
+        posXOffset = posXOffset + 4;
+      }
     }
     if (cell.options.score <= -90) {
       render.rect(tableCloth.viewport.ctx,
