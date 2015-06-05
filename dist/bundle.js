@@ -14073,30 +14073,34 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
               this.options.height, '#DDDDDD', 0.8);
 
   // render subCell connection indicators that fall in the tails
+  var squareSize = this.options.height / 4;
   var numPosSig = 0;
   var posXOffset = 0;
   var numNegSig = 0;
+  var negXOffset = squareSize;
+
   this.options.subCells.forEach(function (cell) {
     if (cell.options.score >= 90) {
       render.rect(tableCloth.viewport.ctx,
                   this.scale(100) + xOffset + posXOffset,
-                  this.options.y - yOffset + (numPosSig % 5) * 4,
-                  4, 4,
-                  cell.options.cellColor,
-                  0.5);
+                  this.options.y - yOffset + (numPosSig % 4) * squareSize,
+                  squareSize, squareSize,
+                  cell.options.cellColor);
       numPosSig = numPosSig + 1;
       if (numPosSig % 5 === 0) {
-        posXOffset = posXOffset + 4;
+        posXOffset = posXOffset + squareSize;
       }
     }
     if (cell.options.score <= -90) {
       render.rect(tableCloth.viewport.ctx,
-                  this.scale(-100) + xOffset - (numNegSig + 1) * 2,
-                  this.options.y - yOffset,
-                  2, this.options.height,
-                  cell.options.cellColor,
-                  0.5);
+                  this.scale(-100) + xOffset + negXOffset,
+                  this.options.y - yOffset - ((numNegSig + 1) % 4) * squareSize,
+                  squareSize, squareSize,
+                  cell.options.cellColor);
       numNegSig = numNegSig + 1;
+      if (numNegSig % 5 === 0) {
+        negXOffset = negXOffset - squareSize;
+      }
     }
   }.bind(this));
 
