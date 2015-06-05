@@ -14178,7 +14178,21 @@ queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
  */
 queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
   this.options.subCells.push(cells);
-  this.updateSummaryScore();
+
+  var scores = this.options.subCells.map(function (cell) {
+    return cell.options.score;
+  });
+
+  var mean = util.mean(scores);
+  var pct;
+  if (mean >= 0) {
+    pct = util.percentile(scores, 75);
+  } else {
+    pct = util.percentile(scores, 25);
+  }
+
+  this.options.score = pct;
+
   return this;
 };
 
