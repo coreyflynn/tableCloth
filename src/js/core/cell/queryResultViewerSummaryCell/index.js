@@ -160,8 +160,9 @@ queryResultViewerSummaryCell.prototype.click = function () {
  */
 queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
   console.log('updateSummary');
+  console.log(this.options.subCells);
   var scores = this.options.subCells.map(function (cell) {
-    console.log(cell);
+
     return cell.options.score;
   });
 
