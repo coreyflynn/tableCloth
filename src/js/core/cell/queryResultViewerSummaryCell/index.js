@@ -159,9 +159,7 @@ queryResultViewerSummaryCell.prototype.click = function () {
  * @return {null} null
  */
 queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
-  console.log('updateSummary');
   var scores = this.options.subCells.map(function (cell) {
-
     return cell.options.score;
   });
 
@@ -184,6 +182,27 @@ queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
 queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
   this.options.subCells = this.options.subCells.concat(cells);
   this.updateSummaryScore();
+  this.sortSubCellsByField('score');
+  return this;
+};
+
+/**
+ * sort the subCells by the given field in their options
+ * @param  {string} field     the field name to sort by
+ * @param  {bool} ascending set to true for ascending sort
+ * @return {queryResultViewerSummaryCell}           a reference to the calling cell
+ */
+queryResultViewerSummaryCell.prototype.sortSubCellsByField = function (field, ascending) {
+  this.subCells.sort(function (a, b) {
+    var res;
+    if (ascending) {
+      res = a.options[field] - b.options[field];
+    } else {
+      res = b.options[field] - a.options[field];
+    }
+    return res;
+  });
+
   return this;
 };
 
