@@ -4,15 +4,16 @@
  ************************************************************************/
 var queryResultViewerBodyCell = require('../queryResultViewerBodyCell');
 var render = require('../../render/index');
+var util = require('../../util');
 var cellOptions = require('./options');
 
-var queryResultViewerSummaryCell = function(options) {
+var queryResultViewerSummaryCell = function (options) {
   // configure the basic options for the cell
-  queryResultViewerBodyCell.call(this,options);
+  queryResultViewerBodyCell.call(this, options);
 
   // configure custom options for queryResultViewerBodyCell
   this.options = cellOptions.configure(options);
-}
+};
 
 // inherit from the queryResultViewerBodyCell
 queryResultViewerSummaryCell.prototype = Object.create(queryResultViewerBodyCell.prototype);
@@ -24,7 +25,7 @@ queryResultViewerSummaryCell.prototype = Object.create(queryResultViewerBodyCell
  * @param  {[type]} yOffset    the y position to use in rendering
  * @param  {[type]} highlight  indicates if the cell should be drawn as a
  *                               highlighted cell
- * @return {queryResultViewerSummaryCell}
+ * @return {queryResultViewerSummaryCell} a reference to the calling cell
  */
 queryResultViewerSummaryCell.prototype.render = function (tableCloth,
                                                 xOffset, yOffset, highlight) {
@@ -79,16 +80,16 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
   this.renderTailBoundaries(tableCloth, xOffset, yOffset);
 
   if (highlight) {
-    this.renderHighlight(tableCloth,xOffset,yOffset,highlight);
+    this.renderHighlight(tableCloth, xOffset, yOffset, highlight);
   }
 
   // render the top border of the cell
-  render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
-              this.options.y - yOffset,this.options.width,1,'white');
+  render.rect(tableCloth.viewport.ctx, this.options.x + xOffset,
+              this.options.y - yOffset, this.options.width, 1, 'white');
 
   return this;
 
-}
+};
 
 /**
  * render the highlight of the row
@@ -151,6 +152,37 @@ queryResultViewerSummaryCell.prototype.click = function() {
   this.options.state = (this.options.state === 'open') ? 'closed' : 'open';
 
   return this;
-}
+};
+
+/**
+ * update the summary score of the cell based on the subCells
+ * @return {null} null
+ */
+queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
+  var scores = this.options.subCells.map(function (cell) {
+    return cell.options.score;
+  });
+
+  var mean = util.mean(scores);
+  var pct;
+  if (mean >= 0) {
+    pct = util.percentile(scores, 75);
+  } else {
+    pct = util.percentile(scores, 25);
+  }
+
+  this.options.score = pct;
+};
+
+/**
+ * add subCells to the summary cell
+ * @param {array} cells the cells to add
+ * @return {queryResultViewerSummaryCell} a reference to the calling cell
+ */
+queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
+  this.options.subCells.push(cells);
+  this.updateSummaryScore();
+  return this;
+};
 
 module.exports = queryResultViewerSummaryCell;
