@@ -1,10 +1,9 @@
 'use strict';
-var tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
+var tc = new tableCloth('target', {cellManager: 'queryResultViewerCellManager'});
 
-var count = 0;
 var start = new Date().getTime();
 var cells = [];
-for (i=0; i < 1000; i++) {
+for (var i=0; i < 1000; i++) {
   var cell = new tc.cellFactory.queryResultViewerSummaryCell({label: 'cell' + i});
   cell = addSubCells(cell);
   cells.push(cell);

@@ -14029,17 +14029,17 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
               this.options.y - yOffset, this.options.width,
               this.options.height, '#DDDDDD');
 
+  // render the label
+  render.text(tableCloth.viewport.ctx, this.options.label,
+              this.options.x + xOffset + 40,
+              this.options.y - yOffset + 19);
+
   // render an overlay to block labels in the summary plot
   render.rect(tableCloth.viewport.ctx,
               this.scale(-100) + xOffset,
               this.options.y - yOffset,
               this.scale(100) - this.scale(-100),
               this.options.height, '#DDDDDD', 0.8);
-
-  // render the label
-  render.text(tableCloth.viewport.ctx, this.options.label,
-              this.options.x + xOffset + 40,
-              this.options.y - yOffset + 19);
 
   // render the color indicator for the row
   render.rect(tableCloth.viewport.ctx,
