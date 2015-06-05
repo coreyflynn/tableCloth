@@ -14181,7 +14181,6 @@ queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
   return this;
 };
 
-
 module.exports = queryResultViewerSummaryCell;
 
 },{"../../render/index":24,"../../util":29,"../queryResultViewerBodyCell":9,"./options":14}],14:[function(require,module,exports){

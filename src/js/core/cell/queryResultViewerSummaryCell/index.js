@@ -185,5 +185,4 @@ queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
   return this;
 };
 
-
 module.exports = queryResultViewerSummaryCell;
