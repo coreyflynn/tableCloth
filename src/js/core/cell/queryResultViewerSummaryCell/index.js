@@ -143,7 +143,7 @@ queryResultViewerSummaryCell.prototype.close = function(duration) {
  * custom click handler to open or close the subCells
  * @return {queryResultViewerSummaryCell}
  */
-queryResultViewerSummaryCell.prototype.click = function() {
+queryResultViewerSummaryCell.prototype.click = function () {
   if (this.options.state === 'closed') {
     this.open(600);
   } else {
@@ -159,6 +159,7 @@ queryResultViewerSummaryCell.prototype.click = function() {
  * @return {null} null
  */
 queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
+  console.log('updateSummary');
   var scores = this.options.subCells.map(function (cell) {
     return cell.options.score;
   });
