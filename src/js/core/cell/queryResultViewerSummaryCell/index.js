@@ -84,7 +84,7 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
     if (cell.options.score >= 90) {
       render.rect(tableCloth.viewport.ctx,
                   this.scale(100) + xOffset + posXOffset,
-                  this.options.y - yOffset + numPosSig % 5,
+                  this.options.y - yOffset + (numPosSig % 5) * 4,
                   4, 4,
                   cell.options.cellColor,
                   0.5);
