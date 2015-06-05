@@ -14189,7 +14189,7 @@ queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
  * @return {queryResultViewerSummaryCell}           a reference to the calling cell
  */
 queryResultViewerSummaryCell.prototype.sortSubCellsByField = function (field, ascending) {
-  this.subCells.sort(function (a, b) {
+  this.options.subCells.sort(function (a, b) {
     var res;
     if (ascending) {
       res = a.options[field] - b.options[field];
