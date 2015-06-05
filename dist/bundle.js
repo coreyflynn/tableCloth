@@ -14192,9 +14192,9 @@ queryResultViewerSummaryCell.prototype.sortSubCellsByField = function (field, as
   this.options.subCells.sort(function (a, b) {
     var res;
     if (ascending) {
-      res = a.options[field] - b.options[field];
-    } else {
       res = b.options[field] - a.options[field];
+    } else {
+      res = a.options[field] - b.options[field];
     }
     return res;
   });
