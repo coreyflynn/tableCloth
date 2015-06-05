@@ -53,7 +53,7 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
               24, this.options.height, this.options.cellColor);
 
   // render the type text for the row
-  render.text(tableCloth.viewport.ctx, this.options.type,
+  render.text(tableCloth.viewport.ctx, this.options.pertType,
               this.options.x + xOffset + 16,
               this.options.y - yOffset + 19,
               'white');
