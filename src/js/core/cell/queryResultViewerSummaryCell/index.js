@@ -26,14 +26,22 @@ queryResultViewerSummaryCell.prototype = Object.create(queryResultViewerBodyCell
  *                               highlighted cell
  * @return {queryResultViewerSummaryCell}
  */
-queryResultViewerSummaryCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
-
+queryResultViewerSummaryCell.prototype.render = function (tableCloth,
+                                                xOffset, yOffset, highlight) {
   // render the background of the cell
-  render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
-              this.options.y - yOffset,this.options.width,this.options.height,'#DDDDDD');
+  render.rect(tableCloth.viewport.ctx, this.options.x + xOffset,
+              this.options.y - yOffset, this.options.width,
+              this.options.height, '#DDDDDD');
+
+  // render an overlay to block labels in the summary plot
+  render.rect(tableCloth.viewport.ctx,
+              this.scale(-100) + xOffset,
+              this.options.y - yOffset,
+              this.scale(100) - this.scale(-100),
+              this.options.height, '#DDDDDD', 0.8);
 
   // render the label
-  render.text(tableCloth.viewport.ctx,this.options.label,
+  render.text(tableCloth.viewport.ctx, this.options.label,
               this.options.x + xOffset + 40,
               this.options.y - yOffset + 19);
 
@@ -41,10 +49,10 @@ queryResultViewerSummaryCell.prototype.render = function(tableCloth,xOffset,yOff
   render.rect(tableCloth.viewport.ctx,
               this.options.x + xOffset + 13,
               this.options.y - yOffset,
-              24,this.options.height,this.options.cellColor);
+              24, this.options.height, this.options.cellColor);
 
   // render the type text for the row
-  render.text(tableCloth.viewport.ctx,this.options.type,
+  render.text(tableCloth.viewport.ctx, this.options.type,
               this.options.x + xOffset + 16,
               this.options.y - yOffset + 19,
               'white');

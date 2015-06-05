@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 var tc = new tableCloth('target',{cellManager: 'queryResultViewerCellManager'});
 
 var count = 0;
