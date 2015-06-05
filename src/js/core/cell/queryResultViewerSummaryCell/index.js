@@ -160,7 +160,6 @@ queryResultViewerSummaryCell.prototype.click = function () {
  */
 queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
   console.log('updateSummary');
-  console.log(this.options.subCells);
   var scores = this.options.subCells.map(function (cell) {
 
     return cell.options.score;
@@ -183,7 +182,7 @@ queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
  * @return {queryResultViewerSummaryCell} a reference to the calling cell
  */
 queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
-  this.options.subCells.push(cells);
+  this.options.subCells = this.options.subCells.concat(cells);
   this.updateSummaryScore();
   return this;
 };
