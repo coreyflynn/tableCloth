@@ -14086,7 +14086,7 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
                   this.options.y - yOffset,
                   2, this.options.height, cell.options.cellColor);
     }
-  });
+  }.bind(this));
 
   // render the tail display for the window
   this.renderTailBoundaries(tableCloth, xOffset, yOffset);
