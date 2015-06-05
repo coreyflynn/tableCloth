@@ -14073,18 +14073,26 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
               this.options.height, '#DDDDDD', 0.8);
 
   // render subCell connection indicators that fall in the tails
-  this.options.subCells.forEach(function (cell, i) {
+  var numPosSig = 0;
+  var numNegSig = 0;
+  this.options.subCells.forEach(function (cell) {
     if (cell.options.score >= 90) {
       render.rect(tableCloth.viewport.ctx,
-                  this.scale(100) + xOffset + i * 2,
+                  this.scale(100) + xOffset + numPosSig * 2,
                   this.options.y - yOffset,
-                  2, this.options.height, cell.options.cellColor);
+                  2, this.options.height,
+                  cell.options.cellColor,
+                  0.5);
+      numPosSig = numPosSig + 1;
     }
     if (cell.options.score <= -90) {
       render.rect(tableCloth.viewport.ctx,
-                  this.scale(0) + xOffset - (i + 1) * 2,
+                  this.scale(0) + xOffset - (numNegSig + 1) * 2,
                   this.options.y - yOffset,
-                  2, this.options.height, cell.options.cellColor);
+                  2, this.options.height,
+                  cell.options.cellColor,
+                  0.5);
+      numNegSig = numNegSig + 1;
     }
   }.bind(this));
 
