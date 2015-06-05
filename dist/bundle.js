@@ -14087,7 +14087,7 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
     }
     if (cell.options.score <= -90) {
       render.rect(tableCloth.viewport.ctx,
-                  this.scale(0) + xOffset - (numNegSig + 1) * 2,
+                  this.scale(-100) + xOffset - (numNegSig + 1) * 2,
                   this.options.y - yOffset,
                   2, this.options.height,
                   cell.options.cellColor,
