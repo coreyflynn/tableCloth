@@ -14157,6 +14157,7 @@ queryResultViewerSummaryCell.prototype.click = function () {
 queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
   console.log('updateSummary');
   var scores = this.options.subCells.map(function (cell) {
+    cnosole.log(cell);
     return cell.options.score;
   });
 
