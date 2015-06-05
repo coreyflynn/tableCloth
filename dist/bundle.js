@@ -14177,6 +14177,7 @@ queryResultViewerSummaryCell.prototype.updateSummaryScore = function () {
  * @return {queryResultViewerSummaryCell} a reference to the calling cell
  */
 queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
+  console.log('foo');
   this.options.subCells.push(cells);
 
   var scores = this.options.subCells.map(function (cell) {
@@ -14192,6 +14193,8 @@ queryResultViewerSummaryCell.prototype.addSubCells = function (cells) {
   }
 
   this.options.score = pct;
+
+  console.log('bar');
 
   return this;
 };
