@@ -7,18 +7,18 @@ var cellOptions = require('./options');
 var render = require('../../render/index');
 var util = require('../../util');
 var _ = require('underscore');
-var d3 = require('d3-browserify');
 
 /**
  * constructor function for the queryResultViewerHeaderCell
  * @param {object} options an object that contains passed options
+ * @return {queryResultViewerHeaderCell} a reference to the calling cell
  */
-var queryResultViewerHeaderCell = function(options){
+var queryResultViewerHeaderCell = function (options) {
   // set up options specific to queryResultViewerHeaderCell
   this.options = cellOptions.configure(options);
 
   // call basicCell's constructor to finish initilization of the cell
-  queryResultViewerBodyCell.call(this,this.options);
+  queryResultViewerBodyCell.call(this, this.options);
 
   return this;
 }

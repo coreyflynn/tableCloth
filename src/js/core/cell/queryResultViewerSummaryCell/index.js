@@ -76,6 +76,22 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
               this.scale(90) - this.scale(-90),
               this.options.height, '#DDDDDD', 0.8);
 
+  // render subCell connection indicators that fall in the tails
+  this.options.subCells.forEach(function (cell, i) {
+    if (cell.options.score >= 90) {
+      render.rect(tableCloth.viewport.ctx,
+                  this.scale(100) + xOffset + i * 2,
+                  this.options.y - yOffset,
+                  2, this.options.height, cell.options.cellColor);
+    }
+    if (cell.options.score <= -90) {
+      render.rect(tableCloth.viewport.ctx,
+                  this.scale(0) + xOffset - (i + 1) * 2,
+                  this.options.y - yOffset,
+                  2, this.options.height, cell.options.cellColor);
+    }
+  });
+
   // render the tail display for the window
   this.renderTailBoundaries(tableCloth, xOffset, yOffset);
 

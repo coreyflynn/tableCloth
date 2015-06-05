@@ -13847,18 +13847,18 @@ var cellOptions = require('./options');
 var render = require('../../render/index');
 var util = require('../../util');
 var _ = require('underscore');
-var d3 = require('d3-browserify');
 
 /**
  * constructor function for the queryResultViewerHeaderCell
  * @param {object} options an object that contains passed options
+ * @return {queryResultViewerHeaderCell} a reference to the calling cell
  */
-var queryResultViewerHeaderCell = function(options){
+var queryResultViewerHeaderCell = function (options) {
   // set up options specific to queryResultViewerHeaderCell
   this.options = cellOptions.configure(options);
 
   // call basicCell's constructor to finish initilization of the cell
-  queryResultViewerBodyCell.call(this,this.options);
+  queryResultViewerBodyCell.call(this, this.options);
 
   return this;
 }
@@ -13975,7 +13975,7 @@ queryResultViewerHeaderCell.prototype.getSummaryScores = function() {
 
 module.exports = queryResultViewerHeaderCell;
 
-},{"../../render/index":24,"../../util":29,"../queryResultViewerBodyCell":9,"../queryResultViewerSummaryCell":13,"./options":12,"d3-browserify":2,"underscore":5}],12:[function(require,module,exports){
+},{"../../render/index":24,"../../util":29,"../queryResultViewerBodyCell":9,"../queryResultViewerSummaryCell":13,"./options":12,"underscore":5}],12:[function(require,module,exports){
 /***********************************************************
  * queryResultViewerHeaderCell option processing utilities *
  ***********************************************************/
@@ -14071,6 +14071,22 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
               this.options.y - yOffset,
               this.scale(90) - this.scale(-90),
               this.options.height, '#DDDDDD', 0.8);
+
+  // render subCell connection indicators that fall in the tails
+  this.options.subCells.forEach(function (cell, i) {
+    if (cell.options.score >= 90) {
+      render.rect(tableCloth.viewport.ctx,
+                  this.scale(100) + xOffset + i * 2,
+                  this.options.y - yOffset,
+                  2, this.options.height, cell.options.cellColor);
+    }
+    if (cell.options.score <= -90) {
+      render.rect(tableCloth.viewport.ctx,
+                  this.scale(0) + xOffset - (i + 1) * 2,
+                  this.options.y - yOffset,
+                  2, this.options.height, cell.options.cellColor);
+    }
+  });
 
   // render the tail display for the window
   this.renderTailBoundaries(tableCloth, xOffset, yOffset);
