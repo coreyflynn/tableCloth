@@ -10,7 +10,12 @@ for (var i=0; i < 1000; i++) {
   // tc.cellManager.addCell(cell);
 }
 
-tc.cellManager.addHeaderCell(new tc.cellFactory.queryResultViewerHeaderCell());
+tc.cellManager.addHeaderCell(new tc.cellFactory.queryResultViewerHeaderCell(
+  {
+    title: 'Summary',
+    filters: [{pertType: 'CP'}]
+  }
+));
 tc.cellManager.addCells(cells);
 
 var end = new Date().getTime();

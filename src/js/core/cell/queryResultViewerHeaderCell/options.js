@@ -4,9 +4,10 @@
 
 function configure(options) {
   options = (options === undefined) ? {} : options;
-  options.height = (options.height === undefined) ? 50 : options.height;
+  options.height = (options.height === undefined) ? 25 : options.height;
   options.summaryScores = (options.summaryScores === undefined) ? [] : options.summaryScores;
   options.summaryPct = (options.summaryPct === undefined) ? 0 : options.summaryPct;
+  options.filters = (options.filters === undefined) ? [] : options.filters;
 
   return options;
 }

@@ -13873,35 +13873,29 @@ queryResultViewerHeaderCell.prototype = Object.create(queryResultViewerBodyCell.
  * @param  {bool} highlight  whether or not to render the cell as highlighted
  * @return {queryResultViewerBodyCell}
  */
-queryResultViewerHeaderCell.prototype.render = function(tableCloth,xOffset,yOffset,highlight) {
+queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yOffset, highlight) {
   // steal the scale from the one of the cells in the viewport
   var templateCell = this.options.cellManager.findApproximateViewportCells()[0];
   this.setScale(templateCell.scale.domain(),
                 templateCell.scale.range());
 
-  // render the background of the cell in two portions, the top half for labels
-  // and the bottom half for the header plot
+  // render the background of the cell
+
   render.rect(tableCloth.viewport.ctx,
               this.options.x + xOffset,
               this.options.y - yOffset,
               this.options.width,
-              this.options.height / 2,'white');
-
-  render.rect(tableCloth.viewport.ctx,
-              this.options.x + xOffset,
-              this.options.y - yOffset + this.options.height / 2,
-              this.options.width,
-              this.options.height / 2,
+              this.options.height,
               '#DDDDDD');
 
   if (highlight) {
-    this.renderHighlight(tableCloth,xOffset,yOffset,highlight);
+    this.renderHighlight(tableCloth, xOffset, yOffset, highlight);
   }
 
   // render the cell label
-  render.text(tableCloth.viewport.ctx,'Summary',
+  render.text(tableCloth.viewport.ctx, this.options.title,
               this.options.x + xOffset + 40,
-              this.options.y - yOffset + this.options.height / 2 + 17);
+              this.options.y - yOffset + 17);
 
   // render the score text for the row
   if (new Date().getTime() - this.options.cellManager.lastChange < 1000) {
@@ -13909,35 +13903,33 @@ queryResultViewerHeaderCell.prototype.render = function(tableCloth,xOffset,yOffs
   }
   render.text(tableCloth.viewport.ctx, this.options.summaryPct.toFixed(2),
               this.options.width - 60,
-              this.options.y - yOffset + this.options.height / 2 + 17);
+              this.options.y - yOffset + 17);
 
   // render the score indicators for all the rows in that viewport
-  var binnedScores = _.groupBy(this.options.summaryScores,function(score){
+  var binnedScores = _.groupBy(this.options.summaryScores, function (score) {
     return Math.floor(this.scale(score) / 10);
   }.bind(this));
 
-  var maxBin = _.max(_.values(binnedScores)
-                      .map(function(a){return a.length}));
-  for (bin in binnedScores){
+  for (var bin in binnedScores) {
     render.rect(tableCloth.viewport.ctx,
                 bin * 10,
-                this.options.y - yOffset + this.options.height / 2,
+                this.options.y - yOffset,
                 10,
-                this.options.height / 2, 'black',
+                this.options.height, 'black',
                 binnedScores[bin].length / this.options.summaryScores.length * 200);
-  };
+  }
 
 
   // render an overlay to emphasize the |90 - 100| scores
   render.rect(tableCloth.viewport.ctx,
               this.scale(-90) + xOffset,
-              this.options.y - yOffset + this.options.height / 2,
+              this.options.y - yOffset,
               this.scale(90) - this.scale(-90),
-              this.options.height / 2, '#DDDDDD', 0.8);
+              this.options.height, '#DDDDDD', 0.8);
 
   // render the tail display for the window
   this.renderTailBoundaries(tableCloth, xOffset,
-                            yOffset - this.options.height / 2);
+                            yOffset);
 
   // render the top border of the cell
   render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
@@ -13950,28 +13942,43 @@ queryResultViewerHeaderCell.prototype.render = function(tableCloth,xOffset,yOffs
  * fetch all of the queryResultViewerSummaryCells in the from the cell's
  * containing cell manager and compute their summary score
  */
-queryResultViewerHeaderCell.prototype.getSummaryScores = function() {
+queryResultViewerHeaderCell.prototype.getSummaryScores = function () {
   // get all of the cells in the cell manager and find the summary cells
   var cells = this.options.cellManager.cells;
-  summaryCells = cells.filter(function(cell){
+  var summaryCells = cells.filter(function (cell) {
     return (cell instanceof queryResultViewerSummaryCell);
   });
 
   // extract the scores from the summary cells
-  this.options.summaryScores = summaryCells.map(function(cell){
+  var filteredCells = _.filter(summaryCells, function (cell) {
+    var match = true;
+    if (this.options.filters.length !== 0) {
+      match = false;
+      this.options.filters.forEach(function (filter) {
+        var key = _.keys(filter)[0];
+        var val = filter[key];
+        if (cell.options[key] === val) {
+          match = true;
+        }
+      });
+    }
+    return match;
+  }.bind(this));
+
+  this.options.summaryScores = filteredCells.map(function (cell) {
     return cell.options.score;
   });
 
   // compute the percentile score based on the mean
   var mean = util.mean(this.options.summaryScores);
   if (mean <= 0) {
-    this.options.summaryPct = util.percentile(this.options.summaryScores,25);
+    this.options.summaryPct = util.percentile(this.options.summaryScores, 25);
   } else {
-    this.options.summaryPct = util.percentile(this.options.summaryScores,75);
+    this.options.summaryPct = util.percentile(this.options.summaryScores, 75);
   }
 
   return this;
-}
+};
 
 module.exports = queryResultViewerHeaderCell;
 
@@ -13982,9 +13989,10 @@ module.exports = queryResultViewerHeaderCell;
 
 function configure(options) {
   options = (options === undefined) ? {} : options;
-  options.height = (options.height === undefined) ? 50 : options.height;
+  options.height = (options.height === undefined) ? 25 : options.height;
   options.summaryScores = (options.summaryScores === undefined) ? [] : options.summaryScores;
   options.summaryPct = (options.summaryPct === undefined) ? 0 : options.summaryPct;
+  options.filters = (options.filters === undefined) ? [] : options.filters;
 
   return options;
 }
@@ -14138,9 +14146,9 @@ queryResultViewerBodyCell.prototype.renderHighlight = function(tableCloth,xOffse
  * @param  {int} duration the length of an opening animation in ms. Defaults to 0ms
  * @return {queryResultViewerSummaryCell}
  */
-queryResultViewerSummaryCell.prototype.open = function(duration) {
+queryResultViewerSummaryCell.prototype.open = function (duration) {
   // make sure the cells have a height that is the same size as their summary cell
-  this.options.subCells.map(function(cell) {
+  this.options.subCells.map(function (cell) {
     cell.options.height = this.options.height;
   }.bind(this));
 
@@ -14149,23 +14157,23 @@ queryResultViewerSummaryCell.prototype.open = function(duration) {
   this.options.cellManager.addCellsAtIndex(cells,
                                             this.options.index + 1,
                                             duration);
-  this.options.subCells.forEach(function(cell){
-    cell.setScale(this.scale.domain(),this.scale.range());
+  this.options.subCells.forEach(function (cell) {
+    cell.setScale(this.scale.domain(), this.scale.range());
   }.bind(this));
 
   return this;
-}
+};
 
 /**
  * closes the summary cell's subCells
  * @param  {int} duration the length of an closing animation in ms. Defaults to 0ms
  * @return {queryResultViewerSummaryCell}
  */
-queryResultViewerSummaryCell.prototype.close = function(duration) {
+queryResultViewerSummaryCell.prototype.close = function (duration) {
   this.options.cellManager.removeCellsAtIndexRange(this.options.index + 1,
         this.options.index + this.options.subCells.length + 1, duration);
   return this;
-}
+};
 
 /**
  * custom click handler to open or close the subCells
@@ -14243,7 +14251,7 @@ module.exports = queryResultViewerSummaryCell;
 
 function configure(options) {
   options = (options === undefined) ? {} : options;
-  options.type = (options.type === undefined) ? 'CP' : options.type;
+  options.pertType = (options.pertType === undefined) ? 'CP' : options.pertType;
   options.subCells = (options.subCells === undefined) ? [] : options.subCells;
   options.score = (options.score === undefined) ? Math.random() * 200 - 100 : options.score;
   options.state = (options.state === undefined) ? 'closed' : options.state;
@@ -14308,7 +14316,7 @@ basicCellManager.prototype.addCell = function(cell,duration) {
     this.renderCells();
   }
 
-  return this
+  return this;
 }
 
 /**
@@ -14319,27 +14327,31 @@ basicCellManager.prototype.addCell = function(cell,duration) {
  *                       adding the cell. Defaults to 0ms
  * @return {tableCloth basicCellManager}
  */
-basicCellManager.prototype.addHeaderCell = function(cell,duration) {
+basicCellManager.prototype.addHeaderCell = function (cell, duration) {
   this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
   if (duration) {
-    this.addCellAtIndex(cell,0,duration);
+    this.addCellAtIndex(cell, 0, duration);
   }
 
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
 
-  setTimeout(function(){
+  setTimeout(function () {
     if (duration) {
       this.removeCellAtIndex(0);
     }
-    cell.options.y = 0;
+    cell.options.y = this.headerHeight;
     cell.options.cellManager = this;
     this.headerCells.push(cell);
-    this.headerHeight = cell.options.height;
+    this.headerHeight = this.headerCells.map(function (headerCell) {
+      return headerCell.options.height;
+    }).reduce(function (previous, current) {
+      return previous + current;
+    });
     this.renderCells();
-  }.bind(this),duration);
+  }.bind(this), duration);
 
   this.renderCells();
 
@@ -14588,10 +14600,10 @@ basicCellManager.prototype.findCellAtPosition = function(x,y) {
  * in the cells array
  * @return {tableCloth basicCellManager}
  */
-basicCellManager.prototype.positionCells = function() {
+basicCellManager.prototype.positionCells = function () {
   var self = this;
   this.cellsHeight = 0;
-  this.cells.forEach(function(cell,i){
+  this.cells.forEach(function (cell, i) {
     cell.options.index = i;
     cell.options.y = self.cellsHeight;
     self.cellsHeight += cell.options.height;
@@ -14603,9 +14615,9 @@ basicCellManager.prototype.positionCells = function() {
 /**
  * render all cells at the current scroll position
  */
-basicCellManager.prototype.renderCells = function() {
-  this.renderCellsAtPosition(this.scrollPosition,0);
-}
+basicCellManager.prototype.renderCells = function () {
+  this.renderCellsAtPosition(this.scrollPosition, 0);
+};
 
 /**
  * renders the view of the cells at the given x and y position
@@ -14613,14 +14625,14 @@ basicCellManager.prototype.renderCells = function() {
  * @param {float} y the y position to be used
  * @return {basicCellManager}
  */
-basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
+basicCellManager.prototype.renderCellsAtPosition = function (x, y) {
   var ctx = this.tableCloth.viewport.ctx;
   var self = this;
   var viewportHeight = this.tableCloth.options.height;
   var viewportWidth = this.tableCloth.options.width;
   var pixelRatio = util.getPixelRatio();
 
-  this.tableCloth.viewport.ctx.setTransform(1,0,0, 1,0,0);
+  this.tableCloth.viewport.ctx.setTransform(1, 0, 0, 1, 0, 0);
   this.tableCloth.viewport.can.width = viewportWidth * pixelRatio;
   this.tableCloth.viewport.can.height = viewportHeight * pixelRatio;
   this.tableCloth.viewport.can.style.width = viewportWidth + 'px';
@@ -14635,25 +14647,25 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
     var highlight = false;
     // only render the cell if it is in the viewport
     if (cell.options.y + cell.options.height > self.scrollPosition) {
-        if (cell.options.index === self.hoveredCellIndex){
-          highlight = true;
-        }
-        cell.render(self.tableCloth,0,
-          self.scrollPosition - self.headerHeight,highlight);
+      if (cell.options.index === self.hoveredCellIndex) {
+        highlight = true;
+      }
+      cell.render(self.tableCloth, 0,
+        self.scrollPosition - self.headerHeight, highlight);
     }
 
     // stop inspecting cells once we are below the viewport
     return cell.options.y > self.scrollPosition + self.tableCloth.options.height;
   });
 
-  this.headerCells.forEach(function(cell){
-    cell.render(self.tableCloth,0,0);
+  this.headerCells.forEach(function (cell) {
+    cell.render(self.tableCloth, 0, 0);
   });
 
-  this.tableCloth.viewport.ctx.setTransform(1 / pixelRatio,0,0, 1 / pixelRatio,0,0);
+  this.tableCloth.viewport.ctx.setTransform(1 / pixelRatio, 0, 0, 1 / pixelRatio, 0, 0);
 
   return this;
-}
+};
 
 /**
  * sorts the cells in the cell manager by their value of the given options field

@@ -50,7 +50,7 @@ basicCellManager.prototype.addCell = function(cell,duration) {
     this.renderCells();
   }
 
-  return this
+  return this;
 }
 
 /**
@@ -61,27 +61,31 @@ basicCellManager.prototype.addCell = function(cell,duration) {
  *                       adding the cell. Defaults to 0ms
  * @return {tableCloth basicCellManager}
  */
-basicCellManager.prototype.addHeaderCell = function(cell,duration) {
+basicCellManager.prototype.addHeaderCell = function (cell, duration) {
   this.lastChange = new Date().getTime();
   duration = (duration === undefined) ? 0 : duration;
   if (duration) {
-    this.addCellAtIndex(cell,0,duration);
+    this.addCellAtIndex(cell, 0, duration);
   }
 
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
 
-  setTimeout(function(){
+  setTimeout(function () {
     if (duration) {
       this.removeCellAtIndex(0);
     }
-    cell.options.y = 0;
+    cell.options.y = this.headerHeight;
     cell.options.cellManager = this;
     this.headerCells.push(cell);
-    this.headerHeight = cell.options.height;
+    this.headerHeight = this.headerCells.map(function (headerCell) {
+      return headerCell.options.height;
+    }).reduce(function (previous, current) {
+      return previous + current;
+    });
     this.renderCells();
-  }.bind(this),duration);
+  }.bind(this), duration);
 
   this.renderCells();
 
@@ -330,10 +334,10 @@ basicCellManager.prototype.findCellAtPosition = function(x,y) {
  * in the cells array
  * @return {tableCloth basicCellManager}
  */
-basicCellManager.prototype.positionCells = function() {
+basicCellManager.prototype.positionCells = function () {
   var self = this;
   this.cellsHeight = 0;
-  this.cells.forEach(function(cell,i){
+  this.cells.forEach(function (cell, i) {
     cell.options.index = i;
     cell.options.y = self.cellsHeight;
     self.cellsHeight += cell.options.height;
@@ -345,9 +349,9 @@ basicCellManager.prototype.positionCells = function() {
 /**
  * render all cells at the current scroll position
  */
-basicCellManager.prototype.renderCells = function() {
-  this.renderCellsAtPosition(this.scrollPosition,0);
-}
+basicCellManager.prototype.renderCells = function () {
+  this.renderCellsAtPosition(this.scrollPosition, 0);
+};
 
 /**
  * renders the view of the cells at the given x and y position
@@ -355,14 +359,14 @@ basicCellManager.prototype.renderCells = function() {
  * @param {float} y the y position to be used
  * @return {basicCellManager}
  */
-basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
+basicCellManager.prototype.renderCellsAtPosition = function (x, y) {
   var ctx = this.tableCloth.viewport.ctx;
   var self = this;
   var viewportHeight = this.tableCloth.options.height;
   var viewportWidth = this.tableCloth.options.width;
   var pixelRatio = util.getPixelRatio();
 
-  this.tableCloth.viewport.ctx.setTransform(1,0,0, 1,0,0);
+  this.tableCloth.viewport.ctx.setTransform(1, 0, 0, 1, 0, 0);
   this.tableCloth.viewport.can.width = viewportWidth * pixelRatio;
   this.tableCloth.viewport.can.height = viewportHeight * pixelRatio;
   this.tableCloth.viewport.can.style.width = viewportWidth + 'px';
@@ -377,25 +381,25 @@ basicCellManager.prototype.renderCellsAtPosition = function(x,y) {
     var highlight = false;
     // only render the cell if it is in the viewport
     if (cell.options.y + cell.options.height > self.scrollPosition) {
-        if (cell.options.index === self.hoveredCellIndex){
-          highlight = true;
-        }
-        cell.render(self.tableCloth,0,
-          self.scrollPosition - self.headerHeight,highlight);
+      if (cell.options.index === self.hoveredCellIndex) {
+        highlight = true;
+      }
+      cell.render(self.tableCloth, 0,
+        self.scrollPosition - self.headerHeight, highlight);
     }
 
     // stop inspecting cells once we are below the viewport
     return cell.options.y > self.scrollPosition + self.tableCloth.options.height;
   });
 
-  this.headerCells.forEach(function(cell){
-    cell.render(self.tableCloth,0,0);
+  this.headerCells.forEach(function (cell) {
+    cell.render(self.tableCloth, 0, 0);
   });
 
-  this.tableCloth.viewport.ctx.setTransform(1 / pixelRatio,0,0, 1 / pixelRatio,0,0);
+  this.tableCloth.viewport.ctx.setTransform(1 / pixelRatio, 0, 0, 1 / pixelRatio, 0, 0);
 
   return this;
-}
+};
 
 /**
  * sorts the cells in the cell manager by their value of the given options field
