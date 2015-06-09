@@ -20,6 +20,8 @@ var queryResultViewerHeaderCell = function (options) {
   // call basicCell's constructor to finish initilization of the cell
   queryResultViewerBodyCell.call(this, this.options);
 
+  this.lastRender = new Date().getTime()
+
   return this;
 }
 // inherit from basicCell
@@ -58,7 +60,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset + 17);
 
   // render the score text for the row
-  if (new Date().getTime() - this.options.cellManager.lastChange < 1000) {
+  if (new Date().getTime() - this.lastRender > 100) {
     this.getSummaryScores();
   }
   render.text(tableCloth.viewport.ctx, this.options.summaryPct.toFixed(2),
@@ -77,7 +79,6 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
                 opacity);
   }
 
-
   // render an overlay to emphasize the |90 - 100| scores
   render.rect(tableCloth.viewport.ctx,
               this.scale(-90) + xOffset,
@@ -93,6 +94,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
   render.rect(tableCloth.viewport.ctx, this.options.x + xOffset,
               this.options.y - yOffset, this.options.width, 1, 'white');
 
+  this.lastRender = new Date().getTime();
   return this;
 };
 
@@ -102,6 +104,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
  */
 queryResultViewerHeaderCell.prototype.getSummaryScores = function () {
   // get all of the cells in the cell manager and find the summary cells
+  console.log('getSummaryScores');
   var cells = this.options.cellManager.cells;
   var summaryCells = cells.filter(function (cell) {
     return (cell instanceof queryResultViewerSummaryCell);
