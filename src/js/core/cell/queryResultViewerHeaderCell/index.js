@@ -133,7 +133,7 @@ queryResultViewerHeaderCell.prototype.getSummaryScores = function () {
 
   this.maxBin = _.max(_.keys(this.binnedScores).map(function (key) {
     return this.binnedScores[key].length;
-  }));
+  }.bind(this)));
 
   // compute the percentile score based on the mean
   var mean = util.mean(this.options.summaryScores);
