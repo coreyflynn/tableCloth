@@ -21,7 +21,9 @@ var basicScrollManager = function(cellManager) {
     if (finalscrollPosition < 0) {
       self.scrollToPosition(0,300);
     }
-    var maxScroll = self.cellManager.cellsHeight - self.cellManager.tableCloth.options.height;
+    var maxScroll = self.cellManager.cellsHeight -
+                    self.cellManager.tableCloth.options.height +
+                    self.cellManager.headerHeight;
     if ( self.cellManager.scrollPosition >= maxScroll) {
       self.scrollToPosition(maxScroll,300);
     }
@@ -34,7 +36,9 @@ var basicScrollManager = function(cellManager) {
     if (self.cellManager.scrollPosition < 0 ) {
       self.cellManager.scrollPosition = 0;
     }
-    var maxScroll = self.cellManager.cellsHeight - self.cellManager.tableCloth.options.height;
+    var maxScroll = self.cellManager.cellsHeight -
+                    self.cellManager.tableCloth.options.height +
+                    self.cellManager.headerHeight;
     if ( self.cellManager.scrollPosition >= maxScroll) {
       self.cellManager.scrollPosition = maxScroll;
     }

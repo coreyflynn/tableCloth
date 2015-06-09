@@ -13886,7 +13886,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset,
               this.options.width,
               this.options.height,
-              '#DDDDDD');
+              this.options.bgColor);
 
   if (highlight) {
     this.renderHighlight(tableCloth, xOffset, yOffset, highlight);
@@ -13930,15 +13930,15 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.scale(-90) + xOffset,
               this.options.y - yOffset,
               this.scale(90) - this.scale(-90),
-              this.options.height, '#DDDDDD', 0.8);
+              this.options.height, this.options.bgColor, 0.8);
 
   // render the tail display for the window
   this.renderTailBoundaries(tableCloth, xOffset,
                             yOffset);
 
   // render the top border of the cell
-  render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
-              this.options.y - yOffset,this.options.width,1,'white');
+  render.rect(tableCloth.viewport.ctx, this.options.x + xOffset,
+              this.options.y - yOffset, this.options.width, 1, 'white');
 
   return this;
 }
@@ -13995,10 +13995,11 @@ module.exports = queryResultViewerHeaderCell;
 function configure(options) {
   options = (options === undefined) ? {} : options;
   options.height = (options.height === undefined) ? 25 : options.height;
+  options.bgColor = (options.bgColor === undefined) ? '#DDDDDD' : options.bgColor;
   options.summaryScores = (options.summaryScores === undefined) ? [] : options.summaryScores;
   options.summaryPct = (options.summaryPct === undefined) ? 0 : options.summaryPct;
   options.filters = (options.filters === undefined) ? [] : options.filters;
-  options.binSize = (options.binSize === undefined) ? 2 : options.binSize;
+  options.binSize = (options.binSize === undefined) ? 4 : options.binSize;
   options.binColor = (options.binColor === undefined) ? '#f47222' : options.binColor;
 
   return options;
@@ -15136,7 +15137,9 @@ var basicScrollManager = function(cellManager) {
     if (finalscrollPosition < 0) {
       self.scrollToPosition(0,300);
     }
-    var maxScroll = self.cellManager.cellsHeight - self.cellManager.tableCloth.options.height;
+    var maxScroll = self.cellManager.cellsHeight -
+                    self.cellManager.tableCloth.options.height +
+                    self.cellManager.headerHeight;
     if ( self.cellManager.scrollPosition >= maxScroll) {
       self.scrollToPosition(maxScroll,300);
     }
@@ -15149,7 +15152,9 @@ var basicScrollManager = function(cellManager) {
     if (self.cellManager.scrollPosition < 0 ) {
       self.cellManager.scrollPosition = 0;
     }
-    var maxScroll = self.cellManager.cellsHeight - self.cellManager.tableCloth.options.height;
+    var maxScroll = self.cellManager.cellsHeight -
+                    self.cellManager.tableCloth.options.height +
+                    self.cellManager.headerHeight;
     if ( self.cellManager.scrollPosition >= maxScroll) {
       self.cellManager.scrollPosition = maxScroll;
     }

@@ -46,7 +46,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset,
               this.options.width,
               this.options.height,
-              '#DDDDDD');
+              this.options.bgColor);
 
   if (highlight) {
     this.renderHighlight(tableCloth, xOffset, yOffset, highlight);
@@ -90,15 +90,15 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.scale(-90) + xOffset,
               this.options.y - yOffset,
               this.scale(90) - this.scale(-90),
-              this.options.height, '#DDDDDD', 0.8);
+              this.options.height, this.options.bgColor, 0.8);
 
   // render the tail display for the window
   this.renderTailBoundaries(tableCloth, xOffset,
                             yOffset);
 
   // render the top border of the cell
-  render.rect(tableCloth.viewport.ctx,this.options.x + xOffset,
-              this.options.y - yOffset,this.options.width,1,'white');
+  render.rect(tableCloth.viewport.ctx, this.options.x + xOffset,
+              this.options.y - yOffset, this.options.width, 1, 'white');
 
   return this;
 }
