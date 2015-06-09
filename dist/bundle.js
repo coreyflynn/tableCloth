@@ -13907,14 +13907,14 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
 
   // render the score indicators for all the rows in that viewport
   var binnedScores = _.groupBy(this.options.summaryScores, function (score) {
-    return Math.floor(this.scale(score) / 10);
+    return Math.floor(this.scale(score) / this.options.binSize);
   }.bind(this));
 
   for (var bin in binnedScores) {
     render.rect(tableCloth.viewport.ctx,
-                bin * 10,
+                bin * this.options.binSize,
                 this.options.y - yOffset,
-                10,
+                this.options.binSize,
                 this.options.height, 'black',
                 binnedScores[bin].length / this.options.summaryScores.length * 200);
   }
@@ -13993,6 +13993,7 @@ function configure(options) {
   options.summaryScores = (options.summaryScores === undefined) ? [] : options.summaryScores;
   options.summaryPct = (options.summaryPct === undefined) ? 0 : options.summaryPct;
   options.filters = (options.filters === undefined) ? [] : options.filters;
+  options.binSize = (options.binSize === undefined) ? 10 : options.binSize;
 
   return options;
 }
