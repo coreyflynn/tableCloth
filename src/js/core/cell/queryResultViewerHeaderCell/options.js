@@ -8,11 +8,12 @@ function configure(options) {
   options.summaryScores = (options.summaryScores === undefined) ? [] : options.summaryScores;
   options.summaryPct = (options.summaryPct === undefined) ? 0 : options.summaryPct;
   options.filters = (options.filters === undefined) ? [] : options.filters;
-  options.binSize = (options.binSize === undefined) ? 10 : options.binSize;
+  options.binSize = (options.binSize === undefined) ? 2 : options.binSize;
+  options.binColor = (options.binColor === undefined) ? '#f47222' : options.binColor;
 
   return options;
 }
 
 module.exports = {
   configure: configure
-}
+};

@@ -97,8 +97,8 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
     }
     if (cell.options.score <= -90) {
       render.rect(tableCloth.viewport.ctx,
-                  this.scale(-100) + xOffset + negXOffset,
-                  this.options.y - yOffset - ((numNegSig + 1) % 4) * squareSize,
+                  this.scale(-100) + xOffset - negXOffset,
+                  this.options.y - yOffset + ((numNegSig) % 4) * squareSize,
                   squareSize, squareSize,
                   cell.options.cellColor);
       numNegSig = numNegSig + 1;

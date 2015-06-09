@@ -13910,13 +13910,18 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
     return Math.floor(this.scale(score) / this.options.binSize);
   }.bind(this));
 
+  var maxBin = _.max(_.keys(binnedScores).map(function (key) {
+    return binnedScores[key].length;
+  }));
   for (var bin in binnedScores) {
+    var opacity = binnedScores[bin].length / maxBin;
+    opacity = (opacity < 0.25) ? 0.25 : opacity;
     render.rect(tableCloth.viewport.ctx,
                 bin * this.options.binSize,
                 this.options.y - yOffset,
                 this.options.binSize,
-                this.options.height, 'black',
-                binnedScores[bin].length / this.options.summaryScores.length * 200);
+                this.options.height, this.options.binColor,
+                opacity);
   }
 
 
@@ -13993,14 +13998,15 @@ function configure(options) {
   options.summaryScores = (options.summaryScores === undefined) ? [] : options.summaryScores;
   options.summaryPct = (options.summaryPct === undefined) ? 0 : options.summaryPct;
   options.filters = (options.filters === undefined) ? [] : options.filters;
-  options.binSize = (options.binSize === undefined) ? 10 : options.binSize;
+  options.binSize = (options.binSize === undefined) ? 2 : options.binSize;
+  options.binColor = (options.binColor === undefined) ? '#f47222' : options.binColor;
 
   return options;
 }
 
 module.exports = {
   configure: configure
-}
+};
 
 },{}],13:[function(require,module,exports){
 /************************************************************************
@@ -14102,8 +14108,8 @@ queryResultViewerSummaryCell.prototype.render = function (tableCloth,
     }
     if (cell.options.score <= -90) {
       render.rect(tableCloth.viewport.ctx,
-                  this.scale(-100) + xOffset + negXOffset,
-                  this.options.y - yOffset - ((numNegSig + 1) % 4) * squareSize,
+                  this.scale(-100) + xOffset - negXOffset,
+                  this.options.y - yOffset + ((numNegSig) % 4) * squareSize,
                   squareSize, squareSize,
                   cell.options.cellColor);
       numNegSig = numNegSig + 1;

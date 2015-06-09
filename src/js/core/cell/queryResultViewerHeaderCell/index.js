@@ -70,13 +70,18 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
     return Math.floor(this.scale(score) / this.options.binSize);
   }.bind(this));
 
+  var maxBin = _.max(_.keys(binnedScores).map(function (key) {
+    return binnedScores[key].length;
+  }));
   for (var bin in binnedScores) {
+    var opacity = binnedScores[bin].length / maxBin;
+    opacity = (opacity < 0.25) ? 0.25 : opacity;
     render.rect(tableCloth.viewport.ctx,
                 bin * this.options.binSize,
                 this.options.y - yOffset,
                 this.options.binSize,
-                this.options.height, 'black',
-                binnedScores[bin].length / this.options.summaryScores.length * 200);
+                this.options.height, this.options.binColor,
+                opacity);
   }
 
 
