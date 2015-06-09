@@ -66,15 +66,8 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset + 17);
 
   // render the score indicators for all the rows in that viewport
-  var binnedScores = _.groupBy(this.options.summaryScores, function (score) {
-    return Math.floor(this.scale(score) / this.options.binSize);
-  }.bind(this));
-
-  var maxBin = _.max(_.keys(binnedScores).map(function (key) {
-    return binnedScores[key].length;
-  }));
-  for (var bin in binnedScores) {
-    var opacity = binnedScores[bin].length / maxBin;
+  for (var bin in this.binnedScores) {
+    var opacity = this.binnedScores[bin].length / this.maxBin;
     opacity = (opacity < 0.25) ? 0.25 : opacity;
     render.rect(tableCloth.viewport.ctx,
                 bin * this.options.binSize,
@@ -101,7 +94,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset, this.options.width, 1, 'white');
 
   return this;
-}
+};
 
 /**
  * fetch all of the queryResultViewerSummaryCells in the from the cell's
@@ -133,6 +126,14 @@ queryResultViewerHeaderCell.prototype.getSummaryScores = function () {
   this.options.summaryScores = filteredCells.map(function (cell) {
     return cell.options.score;
   });
+
+  this.binnedScores = _.groupBy(this.options.summaryScores, function (score) {
+    return Math.floor(this.scale(score) / this.options.binSize);
+  }.bind(this));
+
+  this.maxBin = _.max(_.keys(this.binnedScores).map(function (key) {
+    return this.binnedScores[key].length;
+  }));
 
   // compute the percentile score based on the mean
   var mean = util.mean(this.options.summaryScores);
