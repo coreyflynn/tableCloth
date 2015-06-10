@@ -55,7 +55,20 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
     }
   });
   return this;
-}
+};
+
+/**
+ * add a header cell
+ * @param {cell} cell     the cell to add
+ * @param {int} duration the time in ms for an animation to run;
+ * @return {queryResultViewerCellManager} a reference to the calling object
+ */
+queryResultViewerCellManager.prototype.addHeaderCell = function (cell, duration) {
+  this.newSummaryCells = true;
+  this.constructor.prototype.addHeaderCell.call(this, cell, duration);
+
+  return this;
+};
 
 /**
  * toggles the tails to be zoomed in our out to default values
