@@ -197,9 +197,11 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
   var timer = 0;
   var int = setInterval(function() {
     window.requestAnimationFrame(function() {
-      self.headerCells.forEach(function (headerCell) {
-        headerCell.staleSummary = true;
-      });
+      if (self.cells.length < 1000) {
+        self.headerCells.forEach(function (headerCell) {
+          headerCell.staleSummary = true;
+        });
+      }
 
       var now = new Date().getTime();
       var timeDiff =  now - start;
