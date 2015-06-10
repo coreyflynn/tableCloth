@@ -14806,10 +14806,12 @@ queryResultViewerCellManager.prototype.addHeaderCell = function (cell, duration)
   }
 
   this.animateToScale(domain, range, 600);
-  this.headerCells.forEach(function (headerCell) {
-    headerCell.staleSummary = true;
-  });
-  this.renderCells();
+  setTimeout(function () {
+    this.headerCells.forEach(function (headerCell) {
+      headerCell.staleSummary = true;
+    });
+    this.renderCells();
+  }.bind(this));
   this.tailZoom = !this.tailZoom;
 
   return this;
