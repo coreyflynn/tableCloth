@@ -26,7 +26,7 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
       headerCell.staleSummary = true;
     });
   }
-  this.constructor.prototype.addCell.call(this,cell,duration);
+  this.constructor.prototype.addCell.call(this, cell, duration);
   cell.setScale();
   return this;
 }
@@ -91,6 +91,10 @@ queryResultViewerCellManager.prototype.addHeaderCell = function (cell, duration)
   }
 
   this.animateToScale(domain, range, 600);
+  this.headerCells.forEach(function (headerCell) {
+    headerCell.staleSummary = true;
+  });
+  this.renderCells();
   this.tailZoom = !this.tailZoom;
 
   return this;
