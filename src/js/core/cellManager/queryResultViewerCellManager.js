@@ -1,9 +1,11 @@
 var basicCellManager = require('./basicCellManager');
 var ease = require('ease-component');
+var coreCell = require('../cell');
 
 var queryResultViewerCellManager = function(tableCloth){
   basicCellManager.call(this,tableCloth);
   this.tailZoom = false;
+  this.newSummaryCells = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
@@ -19,16 +21,24 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
+
+  console.log(coreCell);
+  if (cell instanceof coreCell.queryResultViewerSummaryCell) {
+    this.newSummaryCells = true;
+  }
   this.constructor.prototype.addCell.call(this,cell,duration);
   cell.setScale();
   return this;
 }
 
-queryResultViewerCellManager.prototype.addCells = function(cells,duration) {
+queryResultViewerCellManager.prototype.addCells = function(cells, duration) {
   this.constructor.prototype.addCells.call(this,cells,duration);
-  cells.forEach(function(cell){
+  cells.forEach(function (cell) {
     cell.setScale();
-  });
+    if (cell instanceof coreCell.queryResultViewerSummaryCell) {
+      this.newSummaryCells = true;
+    }
+  }.bind(this));
   this.renderCells();
 }
 

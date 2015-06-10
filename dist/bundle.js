@@ -13900,8 +13900,9 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset + 17);
 
   // render the score text for the row
-  if (new Date().getTime() - this.lastRender > 100) {
+  if (this.options.cellManager.newSummaryCells) {
     this.getSummaryScores();
+    this.options.cellManager.newSummaryCells = false;
   }
   render.text(tableCloth.viewport.ctx, this.options.summaryPct.toFixed(2),
               this.options.width - 60,
@@ -13944,7 +13945,6 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
  */
 queryResultViewerHeaderCell.prototype.getSummaryScores = function () {
   // get all of the cells in the cell manager and find the summary cells
-  console.log('getSummaryScores');
   var cells = this.options.cellManager.cells;
   var summaryCells = cells.filter(function (cell) {
     return (cell instanceof queryResultViewerSummaryCell);
@@ -14715,10 +14715,12 @@ module.exports = {
 },{"./basicCellManager":15,"./queryResultViewerCellManager":17}],17:[function(require,module,exports){
 var basicCellManager = require('./basicCellManager');
 var ease = require('ease-component');
+var coreCell = require('../cell');
 
 var queryResultViewerCellManager = function(tableCloth){
   basicCellManager.call(this,tableCloth);
   this.tailZoom = false;
+  this.newSummaryCells = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
@@ -14734,16 +14736,24 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
   if (cell.options.fillContainer) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
+
+  console.log(coreCell);
+  if (cell instanceof coreCell.queryResultViewerSummaryCell) {
+    this.newSummaryCells = true;
+  }
   this.constructor.prototype.addCell.call(this,cell,duration);
   cell.setScale();
   return this;
 }
 
-queryResultViewerCellManager.prototype.addCells = function(cells,duration) {
+queryResultViewerCellManager.prototype.addCells = function(cells, duration) {
   this.constructor.prototype.addCells.call(this,cells,duration);
-  cells.forEach(function(cell){
+  cells.forEach(function (cell) {
     cell.setScale();
-  });
+    if (cell instanceof coreCell.queryResultViewerSummaryCell) {
+      this.newSummaryCells = true;
+    }
+  }.bind(this));
   this.renderCells();
 }
 
@@ -14915,7 +14925,7 @@ queryResultViewerCellManager.prototype.animateToScale = function(domain,
 
 module.exports = queryResultViewerCellManager;
 
-},{"./basicCellManager":15,"ease-component":3}],18:[function(require,module,exports){
+},{"../cell":8,"./basicCellManager":15,"ease-component":3}],18:[function(require,module,exports){
 /***********************
  * Basic Mouse Manager *
  ***********************/

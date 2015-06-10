@@ -60,8 +60,9 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset + 17);
 
   // render the score text for the row
-  if (new Date().getTime() - this.lastRender > 100) {
+  if (this.options.cellManager.newSummaryCells) {
     this.getSummaryScores();
+    this.options.cellManager.newSummaryCells = false;
   }
   render.text(tableCloth.viewport.ctx, this.options.summaryPct.toFixed(2),
               this.options.width - 60,
@@ -104,7 +105,6 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
  */
 queryResultViewerHeaderCell.prototype.getSummaryScores = function () {
   // get all of the cells in the cell manager and find the summary cells
-  console.log('getSummaryScores');
   var cells = this.options.cellManager.cells;
   var summaryCells = cells.filter(function (cell) {
     return (cell instanceof queryResultViewerSummaryCell);
