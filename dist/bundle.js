@@ -13860,7 +13860,7 @@ var queryResultViewerHeaderCell = function (options) {
   // call basicCell's constructor to finish initilization of the cell
   queryResultViewerBodyCell.call(this, this.options);
 
-  this.lastRender = new Date().getTime()
+  this.staleSummary = true;
 
   return this;
 }
@@ -13900,7 +13900,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset + 17);
 
   // render the score text for the row
-  if (this.options.cellManager.newSummaryCells) {
+  if (this.staleSummary) {
     this.getSummaryScores();
     this.options.cellManager.newSummaryCells = false;
   }
@@ -14720,7 +14720,6 @@ var coreCell = require('../cell');
 var queryResultViewerCellManager = function(tableCloth){
   basicCellManager.call(this,tableCloth);
   this.tailZoom = false;
-  this.newSummaryCells = false;
 }
 
 queryResultViewerCellManager.prototype = Object.create(basicCellManager.prototype);
@@ -14737,9 +14736,10 @@ queryResultViewerCellManager.prototype.addCell = function(cell,duration) {
     cell.options.width = this.tableCloth.$el.clientWidth;
   }
 
-  console.log(coreCell);
   if (cell instanceof coreCell.queryResultViewerSummaryCell) {
-    this.newSummaryCells = true;
+    this.headerCells.forEach(function (headerCell) {
+      headerCell.staleSummary = true;
+    });
   }
   this.constructor.prototype.addCell.call(this,cell,duration);
   cell.setScale();
@@ -14751,11 +14751,13 @@ queryResultViewerCellManager.prototype.addCells = function(cells, duration) {
   cells.forEach(function (cell) {
     cell.setScale();
     if (cell instanceof coreCell.queryResultViewerSummaryCell) {
-      this.newSummaryCells = true;
+      this.headerCells.forEach(function (headerCell) {
+        headerCell.staleSummary = true;
+      });
     }
   }.bind(this));
   this.renderCells();
-}
+};
 
 /**
  * sets the scale of all cells in the cellManager
@@ -14779,7 +14781,7 @@ queryResultViewerCellManager.prototype.setScale = function(domain,range) {
  * @return {queryResultViewerCellManager} a reference to the calling object
  */
 queryResultViewerCellManager.prototype.addHeaderCell = function (cell, duration) {
-  this.newSummaryCells = true;
+  cell.staleSummary = true;
   this.constructor.prototype.addHeaderCell.call(this, cell, duration);
 
   return this;

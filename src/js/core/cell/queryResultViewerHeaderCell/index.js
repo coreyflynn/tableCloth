@@ -20,7 +20,7 @@ var queryResultViewerHeaderCell = function (options) {
   // call basicCell's constructor to finish initilization of the cell
   queryResultViewerBodyCell.call(this, this.options);
 
-  this.lastRender = new Date().getTime()
+  this.staleSummary = true;
 
   return this;
 }
@@ -60,7 +60,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
               this.options.y - yOffset + 17);
 
   // render the score text for the row
-  if (this.options.cellManager.newSummaryCells) {
+  if (this.staleSummary) {
     this.getSummaryScores();
     this.options.cellManager.newSummaryCells = false;
   }

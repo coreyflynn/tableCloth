@@ -16,6 +16,12 @@ tc.cellManager.addHeaderCell(new tc.cellFactory.queryResultViewerHeaderCell(
     filters: [{pertType: 'CP'}]
   }
 ));
+tc.cellManager.addHeaderCell(new tc.cellFactory.queryResultViewerHeaderCell(
+  {
+    title: 'Summary',
+    filters: [{pertType: 'CP'}]
+  }
+));
 tc.cellManager.addCells(cells);
 
 var end = new Date().getTime();
