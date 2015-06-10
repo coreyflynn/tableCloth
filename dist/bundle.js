@@ -14811,7 +14811,7 @@ queryResultViewerCellManager.prototype.addHeaderCell = function (cell, duration)
       headerCell.staleSummary = true;
     });
     this.renderCells();
-  }.bind(this));
+  }.bind(this),600);
   this.tailZoom = !this.tailZoom;
 
   return this;
