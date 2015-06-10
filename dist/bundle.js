@@ -13902,7 +13902,7 @@ queryResultViewerHeaderCell.prototype.render = function (tableCloth, xOffset, yO
   // render the score text for the row
   if (this.staleSummary) {
     this.getSummaryScores();
-    this.options.cellManager.newSummaryCells = false;
+    this.staleSummary = false;
   }
   render.text(tableCloth.viewport.ctx, this.options.summaryPct.toFixed(2),
               this.options.width - 60,
