@@ -24,6 +24,11 @@
     "watchify": "^3.1.2"
   },
   "dependencies": {
-    "underscore": "^1.8.3"
+    "babel": "^6.5.2",
+    "babel-core": "^6.14.0",
+    "babel-loader": "^6.2.5",
+    "node-sass": "^3.8.0",
+    "underscore": "^1.8.3",
+    "webpack": "^1.13.2"
   }
 }
